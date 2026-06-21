@@ -74,14 +74,19 @@ width="80">
 
 <td>
 
-<a href="game_edit.php?id=<?= $row['id'] ?>">
+<a
+href="game_edit.php?id=<?= $row['id']; ?>">
 Edit
 </a>
 
 |
 
-<a href="game_delete.php?id=<?= $row['id'] ?>">
+<a
+href="game_delete.php?id=<?= $row['id']; ?>"
+onclick="return confirm('Yakin ingin menghapus game ini?')">
+
 Hapus
+
 </a>
 
 </td>

@@ -2,7 +2,9 @@
 
     <div class="product-image">
 
-        <img src="uploads/game/<?= $row['gambar']; ?>">
+        <img
+        src="uploads/game/<?= !empty($row['gambar']) ? $row['gambar'] : 'default.png'; ?>"
+        alt="<?= htmlspecialchars($row['nama_game']); ?>">
 
         <div class="badge">
             POPULER
@@ -13,11 +15,11 @@
     <div class="product-body">
 
         <h3>
-            <?= $row['nama_game']; ?>
+            <?= htmlspecialchars($row['nama_game']); ?>
         </h3>
 
         <p>
-            <?= substr($row['deskripsi'],0,70); ?>...
+            <?= htmlspecialchars(substr($row['deskripsi'],0,70)); ?>...
         </p>
 
         <div class="product-info">
@@ -37,16 +39,16 @@
             Mulai dari
 
             <strong>
-                Rp 5.000
+                Rp <?= number_format($row['harga'],0,',','.'); ?>
             </strong>
 
         </div>
 
         <a
-href="product/detail.php?id=<?= $row['id']; ?>"
-class="buy-btn">
-Lihat Detail
-</a>
+        href="product/detail.php?id=<?= (int)$row['id']; ?>"
+        class="buy-btn">
+            Lihat Detail
+        </a>
 
     </div>
 

@@ -4,101 +4,258 @@ require_once "../config/config.php";
 require_once "../middleware/admin.php";
 
 $games = mysqli_query(
-$conn,
-"SELECT * FROM games"
+    $conn,
+    "SELECT * FROM games ORDER BY nama_game ASC"
 );
 
-if(isset($_POST['simpan'])){
 
-$game_id =
-$_POST['game_id'];
+if(isset($_POST['simpan']))
+{
 
-$nama_produk =
-$_POST['nama_produk'];
+    $game_id = (int) $_POST['game_id'];
 
-$harga =
-$_POST['harga'];
+    $nama_produk = mysqli_real_escape_string(
+        $conn,
+        $_POST['nama_produk']
+    );
 
-$deskripsi =
-$_POST['deskripsi'];
+    $harga = (int) $_POST['harga'];
 
-$gambar =
-$_FILES['gambar']['name'];
+    $stok = (int) $_POST['stok'];
 
-move_uploaded_file(
-$_FILES['gambar']['tmp_name'],
-"../uploads/game/".$gambar
-);
 
-mysqli_query(
-$conn,
-"INSERT INTO products(
-game_id,
-nama_produk,
-harga,
-gambar,
-deskripsi
-)
-VALUES(
-'$game_id',
-'$nama_produk',
-'$harga',
-'$gambar',
-'$deskripsi'
-)"
-);
+    // Upload gambar
+    $gambar = "";
 
-header("Location: products.php");
+    if(isset($_FILES['gambar']) && $_FILES['gambar']['error'] == 0)
+    {
+
+        $allowed = [
+            "jpg",
+            "jpeg",
+            "png",
+            "webp"
+        ];
+
+
+        $ext = strtolower(
+            pathinfo(
+                $_FILES['gambar']['name'],
+                PATHINFO_EXTENSION
+            )
+        );
+
+
+        if(in_array($ext, $allowed))
+        {
+
+            $gambar = time() . "_" . uniqid() . "." . $ext;
+
+
+            move_uploaded_file(
+                $_FILES['gambar']['tmp_name'],
+                "../uploads/product/" . $gambar
+            );
+
+        }
+
+        else
+        {
+
+            die("Format gambar tidak didukung!");
+
+        }
+
+    }
+
+
+    mysqli_query(
+        $conn,
+        "INSERT INTO products
+        (
+            game_id,
+            nama_produk,
+            harga,
+            stok,
+            gambar
+        )
+        VALUES
+        (
+            '$game_id',
+            '$nama_produk',
+            '$harga',
+            '$stok',
+            '$gambar'
+        )"
+    );
+
+
+    header("Location: product.php");
+    exit;
 
 }
 
 ?>
 
-<form method="POST"
+
+<!DOCTYPE html>
+
+<html lang="id">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+Tambah Produk
+</title>
+
+<link rel="stylesheet"
+href="../assets/css/admin.css">
+
+</head>
+
+
+<body>
+
+
+<div class="content">
+
+
+<a href="product.php"
+class="btn">
+
+← Kembali
+
+</a>
+
+
+<h1>
+Tambah Produk
+</h1>
+
+
+<form 
+method="POST"
 enctype="multipart/form-data">
 
-<select name="game_id">
 
-<?php while($g=mysqli_fetch_assoc($games)): ?>
+<label>
+Pilih Game
+</label>
 
-<option
-value="<?= $g['id'] ?>">
+<br>
 
-<?= $g['nama_game'] ?>
+
+<select 
+name="game_id"
+required>
+
+
+<?php while($game = mysqli_fetch_assoc($games)): ?>
+
+
+<option 
+value="<?= $game['id']; ?>">
+
+<?= htmlspecialchars($game['nama_game']); ?>
 
 </option>
 
+
 <?php endwhile; ?>
+
 
 </select>
 
+
 <br><br>
 
-<input type="text"
+
+<label>
+Nama Produk
+</label>
+
+<br>
+
+
+<input
+type="text"
 name="nama_produk"
-placeholder="Nama Produk">
+placeholder="Contoh: 86 Diamond"
+required>
+
 
 <br><br>
 
-<input type="number"
+
+<label>
+Harga
+</label>
+
+<br>
+
+
+<input
+type="number"
 name="harga"
-placeholder="Harga">
+placeholder="Contoh: 20000"
+required>
+
 
 <br><br>
 
-<textarea
-name="deskripsi">
-</textarea>
+
+<label>
+Stok
+</label>
+
+<br>
+
+
+<input
+type="number"
+name="stok"
+placeholder="Contoh: 999"
+required>
+
 
 <br><br>
 
-<input type="file"
-name="gambar">
+
+<label>
+Gambar Produk
+</label>
+
+<br>
+
+
+<input
+type="file"
+name="gambar"
+accept=".jpg,.jpeg,.png,.webp"
+required>
+
 
 <br><br>
 
-<button name="simpan">
-Simpan
+
+<button
+type="submit"
+name="simpan"
+class="btn">
+
+Simpan Produk
+
 </button>
 
+
 </form>
+
+
+</div>
+
+
+</body>
+
+</html>
