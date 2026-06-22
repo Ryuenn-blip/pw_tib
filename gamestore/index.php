@@ -1,5 +1,6 @@
 <?php
 require_once "config/config.php";
+
 ?>
 
 <!DOCTYPE html>
@@ -345,6 +346,25 @@ Produk belum tersedia
 ";
 
 
+}
+$products = mysqli_query(
+$conn,
+"SELECT
+p.id,
+p.nama_produk,
+p.harga,
+p.gambar,
+g.nama_game
+FROM products p
+JOIN games g
+ON p.game_id = g.id
+ORDER BY p.id DESC
+LIMIT 6"
+);
+
+while($row = mysqli_fetch_assoc($products))
+{
+    include "components/product_card.php";
 }
 
 

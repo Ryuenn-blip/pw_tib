@@ -3,6 +3,7 @@
 require_once "../config/config.php";
 require_once "../middleware/auth.php";
 
+
 $user = $_SESSION['user'];
 
 ?>
