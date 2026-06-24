@@ -1,427 +1,211 @@
 <?php
-require_once "config/config.php";
-
+require_once 'includes/config.php';
+$page_title = 'Beranda';
+require_once 'includes/header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="id">
-
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>GameStore - Top Up Game Murah</title>
-
-<link rel="stylesheet" href="assets/css/style.css">
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-</head>
-
-
-<body>
-
-
-<!-- NAVBAR -->
-
-<nav class="navbar">
-
-<div class="logo">
-<i class="fas fa-gamepad"></i>
-GameStore
-</div>
-
-
-<div class="search">
-
-<input 
-type="text"
-placeholder="Cari game favoritmu...">
-
-</div>
-
-
-<ul>
-
-<li>
-<a href="#">Beranda</a>
-</li>
-
-
-<li>
-<a href="#games">Produk</a>
-</li>
-
-
-<li>
-<a href="#">Cara Order</a>
-</li>
-
-
-<li>
-<a href="#">Chat Admin</a>
-</li>
-
-
-</ul>
-
-
-
-<?php if(isset($_SESSION['user'])): ?>
-
-
-<div class="user-menu">
-
-
-<span class="user-name">
-
-Halo,
-<?= htmlspecialchars($_SESSION['user']['nama']); ?>
-
-</span>
-
-
-<a href="auth/logout.php" class="login-btn">
-
-Logout
-
-</a>
-
-
-</div>
-
-
-<?php else: ?>
-
-
-<a href="auth/login.php" class="login-btn">
-
-Login
-
-</a>
-
-
-<?php endif; ?>
-
-
-</nav>
-
-
-<!-- HERO -->
-
+<!-- Hero -->
 <section class="hero">
+    <canvas class="hero-canvas" id="heroCanvas"></canvas>
+    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-glow-2"></div>
+    <div class="hero-container">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                ✨ Terpercaya &amp; Termurah
+            </div>
+            <h1>Top Up Game &amp; Item<br><span class="accent">Terlengkap &amp; Termurah</span></h1>
+            <p class="hero-desc">Dapatkan berbagai item game favoritmu dengan harga terbaik dan proses instan 24 jam. Aman, cepat, dan terpercaya.</p>
+            <div class="hero-actions">
+                <a href="products.php" class="btn-primary">🎮 Lihat Semua Produk</a>
+                <a href="contact.php" class="btn-outline">💬 Chat Admin</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="number">50K+</div>
+                    <div class="label">Transaksi Selesai</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number">100+</div>
+                    <div class="label">Game Tersedia</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="number">24/7</div>
+                    <div class="label">Layanan Admin</div>
+                </div>
+            </div>
+        </div>
 
-
-<!-- KIRI -->
-
-<div class="hero-left">
-
-
-<h1>
-
-Top Up Game & Item
-
-<br>
-
-<span>
-Terlengkap & Termurah
-</span>
-
-</h1>
-
-
-<p>
-
-Dapatkan diamond, UC, Genesis Crystal,
-dan berbagai item game favorit dengan
-harga murah, proses instan, dan aman.
-
-</p>
-
-
-
-<div class="hero-stats">
-
-
-<div class="stat-box">
-
-<h3>100K+</h3>
-
-<span>Transaksi</span>
-
-</div>
-
-
-<div class="stat-box">
-
-<h3>24/7</h3>
-
-<span>Support</span>
-
-</div>
-
-
-<div class="stat-box">
-
-<h3>100%</h3>
-
-<span>Aman</span>
-
-</div>
-
-
-</div>
-
-
-
-<a href="#games" class="btn-primary">
-
-Top Up Sekarang
-
-</a>
-
-
-</div>
-
-
-<!-- KANAN -->
-
-<div class="hero-right">
-
-
-<img 
-src="assets/images/ultra.png"
-alt="Game Character">
-
-
-</div>
-
-
+        <div class="hero-features">
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon-wrap blue">🛡️</div>
+                    <div class="feature-text">
+                        <div class="title">100% Aman</div>
+                        <div class="desc">Transaksi aman &amp; terpercaya</div>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon-wrap purple">⚡</div>
+                    <div class="feature-text">
+                        <div class="title">Proses Instan</div>
+                        <div class="desc">Pengiriman cepat tanpa menunggu</div>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon-wrap green">🎧</div>
+                    <div class="feature-text">
+                        <div class="title">24/7 Support</div>
+                        <div class="desc">Admin siap bantu kapan saja</div>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon-wrap yellow">⭐</div>
+                    <div class="feature-text">
+                        <div class="title">Harga Terbaik</div>
+                        <div class="desc">Jaminan harga paling murah</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
-
-
-<!-- KEUNGGULAN -->
-
-<section class="features">
-
-
-<div class="feature-card">
-
-<i class="fas fa-shield-halved"></i>
-
-<h3>
-100% Aman
-</h3>
-
-<p>
-Transaksi aman dan terpercaya.
-</p>
-
-</div>
-
-
-
-<div class="feature-card">
-
-
-<i class="fas fa-bolt"></i>
-
-
-<h3>
-Proses Cepat
-</h3>
-
-
-<p>
-Pesanan selesai hanya dalam hitungan menit.
-</p>
-
-
-</div>
-
-
-
-<div class="feature-card">
-
-
-<i class="fas fa-headset"></i>
-
-
-<h3>
-Support 24 Jam
-</h3>
-
-
-<p>
-Admin selalu siap membantu kapan saja.
-</p>
-
-
-</div>
-
-
-
-<div class="feature-card">
-
-
-<i class="fas fa-tags"></i>
-
-
-<h3>
-Harga Murah
-</h3>
-
-
-<p>
-Harga terbaik dengan promo menarik.
-</p>
-
-
-</div>
-
-
+<!-- Promo Banner -->
+<section class="promo-section">
+    <div class="container">
+        <div class="promo-grid">
+            <div class="promo-banner main">
+                <div class="promo-content">
+                    <div class="promo-tag">🔥 Promo Spesial</div>
+                    <div class="promo-title">Diskon 10%<br>Mobile Legends!</div>
+                    <div class="promo-desc">Berlaku untuk semua paket Diamond. Gunakan kode: <strong>MLBB10</strong></div>
+                </div>
+                <div class="promo-deco">💎</div>
+            </div>
+            <div class="promo-banner secondary">
+                <div class="promo-content">
+                    <div class="promo-tag">⚡ Flash Sale</div>
+                    <div class="promo-title">Free Fire<br>Bonus +20%</div>
+                    <div class="promo-desc">Hari ini saja! Stok terbatas.</div>
+                </div>
+                <div class="promo-deco">🔥</div>
+            </div>
+        </div>
+    </div>
 </section>
 
+<!-- Produk Terpopuler -->
+<section class="section" style="padding-top:0">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">🔥 Produk Terpopuler</h2>
+            <a href="products.php" class="section-link">Lihat Semua →</a>
+        </div>
 
+        <div class="filter-tabs">
+            <?php foreach ($categories as $cat): ?>
+            <button class="filter-tab <?= $cat === 'Semua' ? 'active' : '' ?>" data-cat="<?= $cat ?>">
+                <?= $cat ?>
+            </button>
+            <?php endforeach; ?>
+        </div>
 
-
-<!-- PRODUK -->
-
-<section class="section-title">
-
-
-<h2>
-
-🔥 Produk Populer
-
-</h2>
-
-
-<p>
-
-Pilih game favoritmu dan lakukan top up dengan mudah.
-
-</p>
-
-
+        <div class="products-grid">
+            <?php foreach ($games as $game):
+                $min_price = min(array_column($game['packages'], 'price'));
+                $badge_class = match($game['badge']) {
+                    'Terlaris' => '', 'Hot' => 'hot', 'Baru' => 'new', 'Populer' => 'popular', default => ''
+                };
+            ?>
+            <div class="product-card" data-cat="<?= $game['category'] ?>"
+                 onclick="location.href='detail.php?slug=<?= $game['slug'] ?>'">
+                <div class="card-glow"></div>
+                <div class="card-image" style="background: linear-gradient(135deg, <?= $game['color'] ?>22, <?= $game['color'] ?>44)">
+                    <div class="game-emoji"><?= $game['icon'] ?></div>
+                    <?php if ($game['badge']): ?>
+                    <span class="card-badge <?= $badge_class ?>"><?= $game['badge'] ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="card-body">
+                    <div class="card-name"><?= $game['name'] ?></div>
+                    <div class="card-currency"><?= $game['currency'] ?></div>
+                    <div class="card-price">
+                        <?= formatRupiah($min_price) ?>
+                        <small> / mulai dari</small>
+                    </div>
+                    <button class="btn-card">🛒 Lihat Detail</button>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
 </section>
 
-
-<section id="games" class="products-grid">
-
-
-<?php
-
-
-$games = mysqli_query(
-$conn,
-"SELECT * FROM games ORDER BY id DESC"
-);
-
-
-if(mysqli_num_rows($games) > 0)
-{
-
-
-while($row = mysqli_fetch_assoc($games))
-{
-
-include "components/product_card.php";
-
-}
-
-
-}
-else
-{
-
-
-echo "
-<h3 class='empty'>
-Produk belum tersedia
-</h3>
-";
-
-
-}
-$products = mysqli_query(
-$conn,
-"SELECT
-p.id,
-p.nama_produk,
-p.harga,
-p.gambar,
-g.nama_game
-FROM products p
-JOIN games g
-ON p.game_id = g.id
-ORDER BY p.id DESC
-LIMIT 6"
-);
-
-while($row = mysqli_fetch_assoc($products))
-{
-    include "components/product_card.php";
-}
-
-
-?>
-
-
+<!-- Cara Order -->
+<section class="section" style="background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">⚡ Cara Order</h2>
+            <a href="cara-order.php" class="section-link">Selengkapnya →</a>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1️⃣</div>
+                <div class="step-title">Pilih Game</div>
+                <div class="step-desc">Pilih game dan paket top up yang kamu inginkan dari daftar produk kami.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2️⃣</div>
+                <div class="step-title">Masukkan ID</div>
+                <div class="step-desc">Masukkan User ID atau ID karakter game kamu dengan benar dan teliti.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3️⃣</div>
+                <div class="step-title">Bayar & Konfirmasi</div>
+                <div class="step-desc">Lakukan pembayaran sesuai nominal dan kirim bukti transfer ke admin.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4️⃣</div>
+                <div class="step-title">Item Diterima</div>
+                <div class="step-desc">Proses instan! Item langsung masuk ke akun game kamu dalam hitungan menit.</div>
+            </div>
+        </div>
+    </div>
 </section>
 
+<!-- Testimoni -->
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">⭐ Testimoni Pelanggan</h2>
+        </div>
+        <div class="testimonials-grid">
+            <?php foreach ($testimonials as $t): ?>
+            <div class="testi-card">
+                <div class="testi-stars"><?= str_repeat('★', $t['rating']) ?></div>
+                <p class="testi-text">"<?= htmlspecialchars($t['text']) ?>"</p>
+                <div class="testi-author">
+                    <div class="testi-avatar"><?= $t['avatar'] ?></div>
+                    <div>
+                        <div class="testi-name"><?= htmlspecialchars($t['name']) ?></div>
+                        <div class="testi-game"><?= htmlspecialchars($t['game']) ?></div>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
 
+<script>
+// Pass games data to JS for search
+const gamesData = <?= json_encode(array_map(fn($g) => [
+    'name' => $g['name'], 'slug' => $g['slug'],
+    'icon' => $g['icon'], 'currency' => $g['currency']
+], $games)) ?>;
+</script>
 
-
-<!-- FOOTER -->
-
-
-<footer>
-
-
-<h2>
-
-<i class="fas fa-gamepad"></i>
-
-GameStore
-
-</h2>
-
-
-<p>
-
-Platform top up game terpercaya,
-cepat, murah, dan aman untuk semua gamer.
-
-</p>
-
-
-<p>
-
-© 2026 GameStore. All Rights Reserved.
-
-</p>
-
-
-</footer>
-
-
-
-
-<!-- FLOAT CHAT -->
-
-
-<a href="#" class="floating-chat">
-
-<i class="fas fa-comment"></i>
-
-</a>
-
-
-
-</body>
-
-</html>
+<?php require_once 'includes/footer.php'; ?>
