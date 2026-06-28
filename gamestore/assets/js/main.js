@@ -22,10 +22,24 @@ function saveCart(cart) {
 }
 function updateCartBadge() {
     const badge = document.getElementById('cartBadge');
-    if (badge) badge.textContent = getCart().length;
+    const n = getCart().length;
+    if (badge) {
+        badge.textContent = n;
+        badge.style.display = n > 0 ? 'flex' : 'flex';
+    }
 }
 function addToCart(item) {
+    if (!item.game || !item.pkg || !item.price) {
+        showToast('⚠️ Pilih paket terlebih dahulu!', 'error');
+        return;
+    }
     const cart = getCart();
+    // Prevent exact duplicate
+    const dup = cart.find(c => c.game===item.game && c.pkg===item.pkg && c.userId===item.userId);
+    if (dup) {
+        showToast('⚠️ Item ini sudah ada di keranjang!', 'error');
+        return;
+    }
     cart.push(item);
     saveCart(cart);
     showToast('✅ Ditambahkan ke keranjang!', 'success');

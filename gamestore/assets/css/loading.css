@@ -1,0 +1,377 @@
+/* ============================================================
+   GAMESTORE LOADING & ANIMATION SYSTEM
+   - Page Loader (fullscreen saat pertama buka)
+   - Top Progress Bar (saat navigasi)
+   - Skeleton Loading (kartu produk)
+   - Scroll Reveal (elemen muncul saat scroll)
+   - Page Transition (fade antar halaman)
+   - Micro-interactions (hover, click, pulse)
+   ============================================================ */
+
+/* ── 1. PAGE LOADER ──────────────────────────────────────── */
+#gs-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #0D1117;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    transition: opacity .5s ease, visibility .5s ease;
+}
+#gs-loader.hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Logo animasi */
+.loader-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .875rem;
+    animation: loaderFadeIn .6s ease both;
+}
+.loader-icon {
+    font-size: 3.5rem;
+    animation: loaderBounce 1.2s ease infinite;
+    filter: drop-shadow(0 0 24px rgba(0,212,255,.6));
+}
+.loader-brand {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #F0F6FF;
+    letter-spacing: -1px;
+}
+.loader-brand span { color: #00D4FF; }
+.loader-tagline {
+    font-size: .78rem;
+    color: #8B949E;
+    font-weight: 500;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+}
+
+/* Spinner ring */
+.loader-spinner {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    animation: loaderFadeIn .6s .2s ease both;
+}
+.loader-spinner::before,
+.loader-spinner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 3px solid transparent;
+}
+.loader-spinner::before {
+    border-top-color: #2563EB;
+    border-right-color: #2563EB;
+    animation: loaderSpin .9s linear infinite;
+}
+.loader-spinner::after {
+    inset: 8px;
+    border-top-color: #00D4FF;
+    animation: loaderSpin .7s linear infinite reverse;
+}
+
+/* Progress dots */
+.loader-dots {
+    display: flex;
+    gap: .5rem;
+    animation: loaderFadeIn .6s .3s ease both;
+}
+.loader-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #2563EB;
+    animation: loaderDot 1.2s ease infinite;
+}
+.loader-dots span:nth-child(2) { animation-delay: .15s; background: #3B82F6; }
+.loader-dots span:nth-child(3) { animation-delay: .30s; background: #00D4FF; }
+
+/* Loading tips */
+.loader-tip {
+    font-size: .78rem;
+    color: #6E7681;
+    text-align: center;
+    max-width: 260px;
+    line-height: 1.6;
+    animation: loaderFadeIn .6s .4s ease both;
+}
+
+@keyframes loaderFadeIn {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+@keyframes loaderBounce {
+    0%,100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-8px) scale(1.05); }
+}
+@keyframes loaderSpin {
+    to { transform: rotate(360deg); }
+}
+@keyframes loaderDot {
+    0%,60%,100% { transform: translateY(0); opacity:.4; }
+    30%          { transform: translateY(-6px); opacity:1; }
+}
+
+/* ── 2. TOP PROGRESS BAR ─────────────────────────────────── */
+#gs-progress {
+    position: fixed;
+    top: 0; left: 0;
+    width: 0%;
+    height: 3px;
+    z-index: 100000;
+    background: linear-gradient(90deg, #2563EB, #00D4FF, #2563EB);
+    background-size: 200% 100%;
+    animation: progressShimmer 1.5s linear infinite;
+    transition: width .3s ease, opacity .4s ease;
+    border-radius: 0 2px 2px 0;
+    box-shadow: 0 0 10px rgba(0,212,255,.6);
+}
+#gs-progress.done {
+    width: 100% !important;
+    opacity: 0;
+}
+@keyframes progressShimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ── 3. SKELETON LOADING ─────────────────────────────────── */
+.skeleton {
+    background: linear-gradient(90deg,
+        var(--bg3) 25%,
+        rgba(48,54,61,.8) 50%,
+        var(--bg3) 75%
+    );
+    background-size: 400% 100%;
+    animation: skeletonWave 1.6s ease infinite;
+    border-radius: 6px;
+    display: block;
+}
+@keyframes skeletonWave {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Skeleton product card */
+.skeleton-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+}
+.skeleton-card .sk-img {
+    height: 140px;
+    border-radius: 0;
+}
+.skeleton-card .sk-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .625rem;
+}
+.skeleton-card .sk-title { height: 14px; width: 70%; }
+.skeleton-card .sk-sub   { height: 11px; width: 45%; }
+.skeleton-card .sk-price { height: 18px; width: 55%; margin-top: .25rem; }
+.skeleton-card .sk-btn   { height: 36px; width: 100%; margin-top: .25rem; border-radius: 8px; }
+
+/* Skeleton hero */
+.skeleton-hero-title { height: 48px; width: 60%; border-radius: 8px; }
+.skeleton-hero-sub   { height: 20px; width: 80%; border-radius: 6px; margin-top: .75rem; }
+.skeleton-hero-btn   { height: 48px; width: 180px; border-radius: 12px; margin-top: 1.25rem; }
+
+/* ── 4. SCROLL REVEAL ────────────────────────────────────── */
+.gs-reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity .6s cubic-bezier(.4,0,.2,1),
+                transform .6s cubic-bezier(.4,0,.2,1);
+}
+.gs-reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger children */
+.gs-reveal-stagger > * {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .5s cubic-bezier(.4,0,.2,1),
+                transform .5s cubic-bezier(.4,0,.2,1);
+}
+.gs-reveal-stagger.visible > *:nth-child(1) { transition-delay: .05s; opacity:1; transform:none; }
+.gs-reveal-stagger.visible > *:nth-child(2) { transition-delay: .12s; opacity:1; transform:none; }
+.gs-reveal-stagger.visible > *:nth-child(3) { transition-delay: .19s; opacity:1; transform:none; }
+.gs-reveal-stagger.visible > *:nth-child(4) { transition-delay: .26s; opacity:1; transform:none; }
+.gs-reveal-stagger.visible > *:nth-child(5) { transition-delay: .33s; opacity:1; transform:none; }
+.gs-reveal-stagger.visible > *:nth-child(6) { transition-delay: .40s; opacity:1; transform:none; }
+.gs-reveal-stagger.visible > *:nth-child(7) { transition-delay: .47s; opacity:1; transform:none; }
+.gs-reveal-stagger.visible > *:nth-child(8) { transition-delay: .54s; opacity:1; transform:none; }
+.gs-reveal-stagger.visible > *:nth-child(n+9) { opacity:1; transform:none; }
+
+/* Slide from left/right */
+.gs-reveal-left  { opacity:0; transform:translateX(-32px); transition: opacity .6s ease, transform .6s ease; }
+.gs-reveal-right { opacity:0; transform:translateX(32px);  transition: opacity .6s ease, transform .6s ease; }
+.gs-reveal-left.visible,
+.gs-reveal-right.visible { opacity:1; transform:translateX(0); }
+
+/* Scale up */
+.gs-reveal-scale {
+    opacity:0; transform:scale(.92);
+    transition: opacity .5s ease, transform .5s ease;
+}
+.gs-reveal-scale.visible { opacity:1; transform:scale(1); }
+
+/* ── 5. PAGE TRANSITION ──────────────────────────────────── */
+.gs-page-out {
+    animation: pageOut .35s ease forwards;
+}
+@keyframes pageOut {
+    to { opacity:0; transform:translateY(-8px); }
+}
+.gs-page-in {
+    animation: pageIn .4s ease both;
+}
+@keyframes pageIn {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── 6. MICRO INTERACTIONS ───────────────────────────────── */
+
+/* Button ripple */
+.ripple-host { position:relative; overflow:hidden; }
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,.25);
+    transform: scale(0);
+    animation: rippleAnim .55s linear;
+    pointer-events: none;
+}
+@keyframes rippleAnim {
+    to { transform:scale(4); opacity:0; }
+}
+
+/* Pulse glow on stat numbers */
+.gs-count-up {
+    display: inline-block;
+    transition: transform .1s ease;
+}
+
+/* Floating label for inputs */
+.gs-float-label {
+    position: relative;
+}
+.gs-float-label input,
+.gs-float-label textarea {
+    padding-top: 1.375rem;
+    padding-bottom: .4rem;
+}
+.gs-float-label label {
+    position: absolute;
+    left: 1rem;
+    top: .9rem;
+    font-size: .875rem;
+    color: var(--gray);
+    pointer-events: none;
+    transition: .2s ease;
+    transform-origin: left top;
+}
+.gs-float-label input:focus ~ label,
+.gs-float-label input:not(:placeholder-shown) ~ label,
+.gs-float-label textarea:focus ~ label,
+.gs-float-label textarea:not(:placeholder-shown) ~ label {
+    transform: scale(.75) translateY(-14px);
+    color: var(--cyan);
+}
+
+/* Image lazy-load fade */
+img.gs-img {
+    opacity: 0;
+    transition: opacity .45s ease;
+}
+img.gs-img.loaded { opacity: 1; }
+img.gs-img.error {
+    opacity: .3;
+    filter: grayscale(1);
+}
+
+/* Card hover lift with glow */
+.gs-card-hover {
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.gs-card-hover:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 48px rgba(37,99,235,.2), 0 0 0 1px rgba(37,99,235,.3);
+}
+
+/* Number ticker */
+@keyframes tickUp {
+    from { transform:translateY(100%); opacity:0; }
+    to   { transform:translateY(0);    opacity:1; }
+}
+
+/* ── 7. SCROLL PROGRESS INDICATOR ───────────────────────── */
+#gs-scroll-bar {
+    position: fixed;
+    top: 68px; /* below navbar */
+    left: 0;
+    width: 0%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+    z-index: 999;
+    transition: width .1s linear;
+    box-shadow: 0 0 8px rgba(0,212,255,.4);
+}
+
+/* ── 8. TOAST UPGRADE ────────────────────────────────────── */
+.toast {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+}
+.toast::before {
+    content: '';
+    width: 4px;
+    height: 32px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    background: var(--gray);
+}
+.toast.success::before { background: var(--success); }
+.toast.error::before   { background: var(--danger); }
+.toast.info::before    { background: var(--blue); }
+
+/* ── 9. REDUCED MOTION ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    #gs-loader,
+    .skeleton,
+    .loader-spinner::before,
+    .loader-spinner::after,
+    .loader-icon,
+    .loader-dots span,
+    #gs-progress,
+    .gs-reveal,
+    .gs-reveal-stagger > *,
+    .gs-reveal-left,
+    .gs-reveal-right,
+    .gs-reveal-scale {
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    #gs-loader { display: none !important; }
+}
