@@ -9,10 +9,10 @@
                 </div>
                 <p>Platform top up game terlengkap dan termurah di Indonesia. Proses instan, aman, dan terpercaya sejak 2020.</p>
                 <div class="footer-social">
-                    <a href="https://www.instagram.com/hasanazhari768/" aria-label="WhatsApp">💬</a>
-                    <a href="https://www.instagram.com/hasanazhari768/" aria-label="Instagram">📸</a>
-                    <a href="https://www.instagram.com/hasanazhari768/" aria-label="Telegram">✈️</a>
-                    <a href="https://www.instagram.com/hasanazhari768/" aria-label="Twitter">🐦</a>
+                    <a href="#" aria-label="WhatsApp">💬</a>
+                    <a href="#" aria-label="Instagram">📸</a>
+                    <a href="#" aria-label="Telegram">✈️</a>
+                    <a href="#" aria-label="Twitter">🐦</a>
                 </div>
             </div>
 
@@ -41,8 +41,8 @@
             <div class="footer-links">
                 <h4>Kontak</h4>
                 <ul>
-                    <li>📱 WhatsApp: 0852-5335-0030</li>
-                    <li>📧 RyuenStore@gamestore.id</li>
+                    <li>📱 WhatsApp: 0812-3456-7890</li>
+                    <li>📧 admin@gamestore.id</li>
                     <li>⏰ 24 Jam / 7 Hari</li>
                     <li>📍 Indonesia</li>
                 </ul>
@@ -64,6 +64,7 @@
 <!-- Toast notification -->
 <div class="toast" id="toast"></div>
 
+<script src="assets/js/loading.js"></script>
 <script src="assets/js/main.js"></script>
 
 <!-- ── Live Chat Widget ── -->

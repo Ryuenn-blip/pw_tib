@@ -35,8 +35,12 @@ require_once 'includes/header.php';
             <div class="product-card" data-cat="<?= $game['category'] ?>" <?= $hidden ?>
                  onclick="location.href='detail.php?slug=<?= $game['slug'] ?>'">
                 <div class="card-glow"></div>
-                <div class="card-image" style="background: linear-gradient(135deg, <?= $game['color'] ?>22, <?= $game['color'] ?>44)">
-                    <div class="game-emoji"><?= $game['icon'] ?></div>
+                <div class="card-image">
+                    <img src="<?= htmlspecialchars($game['img']) ?>"
+                         alt="<?= htmlspecialchars($game['name']) ?>"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.src='assets/img/placeholder.png'">
+                    <div class="card-img-overlay"></div>
                     <?php if ($game['badge']): ?>
                     <span class="card-badge <?= $badge_class ?>"><?= $game['badge'] ?></span>
                     <?php endif; ?>
@@ -47,7 +51,7 @@ require_once 'includes/header.php';
                     <div class="card-price">
                         <?= formatRupiah($min_price) ?> <small>/ mulai dari</small>
                     </div>
-                    <button class="btn-card">Lihat Detail</button>
+                    <button class="btn-card">🛒 Lihat Detail</button>
                 </div>
             </div>
             <?php endforeach; ?>

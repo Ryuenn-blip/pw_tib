@@ -113,18 +113,22 @@ require_once 'includes/header.php';
             <?php endforeach; ?>
         </div>
 
-        <div class="products-grid">
+        <div class="products-grid gs-reveal-stagger">
             <?php foreach ($games as $game):
                 $min_price = min(array_column($game['packages'], 'price'));
                 $badge_class = match($game['badge']) {
-                    'Terlaris' => '', 'Hot' => 'hot', 'Baru' => 'new', 'Populer' => 'popular', default => ''
+                    'Hot' => 'hot', 'Baru' => 'new', 'Populer' => 'popular', default => ''
                 };
             ?>
             <div class="product-card" data-cat="<?= $game['category'] ?>"
                  onclick="location.href='detail.php?slug=<?= $game['slug'] ?>'">
                 <div class="card-glow"></div>
-                <div class="card-image" style="background: linear-gradient(135deg, <?= $game['color'] ?>22, <?= $game['color'] ?>44)">
-                    <div class="game-emoji"><?= $game['icon'] ?></div>
+                <div class="card-image">
+                    <img src="<?= htmlspecialchars($game['img']) ?>"
+                         alt="<?= htmlspecialchars($game['name']) ?>"
+                         loading="lazy"
+                         onerror="this.onerror=null;this.src='assets/img/placeholder.png'">
+                    <div class="card-img-overlay"></div>
                     <?php if ($game['badge']): ?>
                     <span class="card-badge <?= $badge_class ?>"><?= $game['badge'] ?></span>
                     <?php endif; ?>
@@ -151,7 +155,7 @@ require_once 'includes/header.php';
             <h2 class="section-title">⚡ Cara Order</h2>
             <a href="cara-order.php" class="section-link">Selengkapnya →</a>
         </div>
-        <div class="steps-grid">
+        <div class="steps-grid gs-reveal-stagger">
             <div class="step-card">
                 <div class="step-number">1️⃣</div>
                 <div class="step-title">Pilih Game</div>
@@ -182,7 +186,7 @@ require_once 'includes/header.php';
         <div class="section-header">
             <h2 class="section-title">⭐ Testimoni Pelanggan</h2>
         </div>
-        <div class="testimonials-grid">
+        <div class="testimonials-grid gs-reveal-stagger">
             <?php foreach ($testimonials as $t): ?>
             <div class="testi-card">
                 <div class="testi-stars"><?= str_repeat('★', $t['rating']) ?></div>

@@ -119,3 +119,77 @@ function validate_promo(string $code, int $price): array {
     return ['valid'=>true,'discount'=>$disc,'pct'=>$promo['discount_pct'],
             'msg'=>"Diskon {$promo['discount_pct']}% berhasil!"];
 }
+
+// ── USER AUTH FUNCTIONS ───────────────────────────────────────
+function user_register(string $name, string $email, string $phone, string $password): array {
+    // Cek email sudah ada
+    if (db_row('SELECT id FROM customers WHERE email = ?', [$email])) {
+        return ['success' => false, 'msg' => 'Email sudah terdaftar. Silakan login.'];
+    }
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    db_insert(
+        'INSERT INTO customers (name, email, phone, password) VALUES (?,?,?,?)',
+        [$name, $email, $phone, $hash]
+    );
+    return ['success' => true, 'msg' => 'Akun berhasil dibuat!'];
+}
+
+function user_login(string $email, string $password): array {
+    $user = db_row('SELECT * FROM customers WHERE email = ? AND is_active = 1', [$email]);
+    if (!$user || !password_verify($password, $user['password'])) {
+        return ['success' => false, 'msg' => 'Email atau password salah.'];
+    }
+    // Set session
+    $_SESSION['user_id']    = $user['id'];
+    $_SESSION['user_name']  = $user['name'];
+    $_SESSION['user_email'] = $user['email'];
+    $_SESSION['user_phone'] = $user['phone'];
+    return ['success' => true, 'user' => $user];
+}
+
+function user_logout(): void {
+    unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email'], $_SESSION['user_phone']);
+}
+
+function user_logged_in(): bool {
+    return !empty($_SESSION['user_id']);
+}
+
+function user_get_orders(int $user_id): array {
+    return db_rows(
+        'SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC',
+        [$user_id]
+    );
+}
+
+function user_require_login(): void {
+    if (!user_logged_in()) {
+        header('Location: login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+        exit;
+    }
+}
+
+// ── PROMO VALIDATE (fix field name) ──────────────────────────
+function validate_promo_code(string $code, int $price): array {
+    $promo = db_row("
+        SELECT * FROM promo_codes
+        WHERE code = ? AND is_active = 1
+          AND (valid_until IS NULL OR valid_until >= CURDATE())
+    ", [strtoupper($code)]);
+    if (!$promo) return ['valid'=>false,'msg'=>'Kode promo tidak valid atau sudah kedaluwarsa'];
+    if ($promo['max_use'] && $promo['used_count'] >= $promo['max_use'])
+        return ['valid'=>false,'msg'=>'Kuota kode promo sudah habis'];
+    if ($price < (int)$promo['min_purchase'])
+        return ['valid'=>false,'msg'=>'Minimal pembelian Rp '.number_format($promo['min_purchase'],0,',','.')];
+    // Hitung diskon
+    if ($promo['type'] === 'percent') {
+        $disc = (int)round($price * $promo['value'] / 100);
+        if ($promo['max_discount']) $disc = min($disc, (int)$promo['max_discount']);
+        $msg = "Diskon {$promo['value']}% berhasil diterapkan!";
+    } else {
+        $disc = (int)$promo['value'];
+        $msg  = 'Diskon Rp '.number_format($disc,0,',','.').' berhasil diterapkan!';
+    }
+    $disc = min($disc, $price); // tidak boleh melebihi harga
+    return ['valid'=>true,'discount'=>$disc,'msg'=>$msg,'code'=>strtoupper($code)];
+}

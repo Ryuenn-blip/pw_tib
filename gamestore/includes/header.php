@@ -1,4 +1,6 @@
 <?php
+// Start session jika belum
+if (session_status() === PHP_SESSION_NONE) session_start();
 $current_page = basename($_SERVER['PHP_SELF'], '.php');
 ?>
 <!DOCTYPE html>
@@ -11,6 +13,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/loading.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -20,7 +23,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
     <div class="container nav-container">
         <a href="index.php" class="nav-logo">
             <span class="logo-icon">🎮</span>
-            <span class="logo-text">Ryuen<span class="logo-accent">Store</span></span>
+            <span class="logo-text">Game<span class="logo-accent">Store</span></span>
         </a>
 
         <div class="nav-search">
@@ -47,7 +50,19 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
             <a href="cart.php" class="btn-cart">
                 🛒 <span class="cart-badge" id="cartBadge">0</span>
             </a>
+            <?php if (isset($_SESSION['user_id'])): ?>
+            <a href="dashboard.php" class="btn-login" style="display:flex;align-items:center;gap:.4rem">
+                <span style="width:24px;height:24px;border-radius:50%;
+                    background:linear-gradient(135deg,var(--blue),var(--cyan));
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:.7rem;font-weight:900;flex-shrink:0">
+                    <?= strtoupper($_SESSION['user_name'][0]) ?>
+                </span>
+                <?= htmlspecialchars(explode(' ', $_SESSION['user_name'])[0]) ?>
+            </a>
+            <?php else: ?>
             <a href="login.php" class="btn-login">Login</a>
+            <?php endif; ?>
         </div>
 
         <button class="nav-hamburger" id="hamburger" aria-label="Menu">
