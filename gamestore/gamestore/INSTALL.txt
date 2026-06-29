@@ -1,0 +1,50 @@
+===========================================
+  GAMESTORE — PANDUAN INSTALASI CEPAT
+===========================================
+
+REQUIREMENTS:
+  - PHP 7.4 atau lebih baru
+  - Apache / Nginx dengan mod_rewrite
+  - Shared hosting / VPS / XAMPP / Laragon
+
+LANGKAH INSTALASI:
+  1. Upload seluruh isi folder ini ke public_html/
+     (atau subfolder, contoh: public_html/gamestore/)
+
+  2. Beri permission writable pada folder:
+       chmod 755 chat/data/
+       chmod 755 admin/data/
+
+  3. Buka website kamu di browser
+
+  4. Login ke admin panel:
+       URL      : yourdomain.com/admin/
+       Username : admin
+       Password : admin123
+
+  5. SEGERA ganti password di:
+       admin/includes/admin_config.php
+       Cari: define('ADMIN_PASS', ...)
+       Ubah ke: password_hash('PasswordBaru', PASSWORD_DEFAULT)
+
+  6. Ubah nomor WhatsApp di:
+       includes/config.php
+       Cari: define('WHATSAPP_NUMBER', '6281234567890')
+       Ubah ke nomor WA admin kamu (format: 628xxxxxxxxxx)
+
+FITUR:
+  Website  : 13 halaman customer
+  Admin    : 9 halaman panel admin
+  Chat     : Live chat real-time (file-based, tanpa DB)
+  Produk   : CRUD lengkap dari admin panel
+  Pembayaran: Halaman pembayaran + upload bukti transfer
+
+CATATAN:
+  - Tidak memerlukan database (MySQL/PostgreSQL)
+  - Data disimpan sebagai file JSON di chat/data/ dan admin/data/
+  - Pastikan folder tersebut bisa ditulis oleh webserver
+
+SUPPORT:
+  Lihat README.md untuk dokumentasi lengkap
+
+===========================================
