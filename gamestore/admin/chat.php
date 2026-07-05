@@ -3,7 +3,7 @@ require_once 'includes/admin_config.php';
 requireLogin();
 
 // Muat semua sesi dari engine chat
-require_once '../chat/chat_engine.php';
+require_once '../chat/chat_engine_db.php';
 
 $page_title  = 'Live Chat';
 $active_menu = 'chat';

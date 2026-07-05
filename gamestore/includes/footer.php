@@ -32,6 +32,7 @@
                 <ul>
                     <li><a href="products.php">Semua Produk</a></li>
                     <li><a href="cara-order.php">Cara Order</a></li>
+                    <li><a href="tracking.php">Cek Status Order</a></li>
                     <li><a href="contact.php">Hubungi Admin</a></li>
                     <li><a href="faq.php">FAQ</a></li>
                     <li><a href="terms.php">Syarat & Ketentuan</a></li>

@@ -98,6 +98,7 @@ require_once 'includes/header.php';
             <nav class="dash-nav">
                 <a href="dashboard.php" class="active">📊 Overview</a>
                 <a href="dashboard.php?tab=orders">📋 Riwayat Order</a>
+                <a href="tracking.php">📦 Cek Status Order</a>
                 <a href="dashboard.php?tab=profile">👤 Edit Profil</a>
                 <a href="products.php">🎮 Top Up Sekarang</a>
                 <a href="contact.php">💬 Hubungi Admin</a>
@@ -167,7 +168,7 @@ require_once 'includes/header.php';
                         <?= statusBadge($o['status']) ?>
                     </div>
                     <div style="font-size:.75rem;color:var(--gray)">
-                        <?= htmlspecialchars($o['package_info'] ?? '') ?>
+                        <?= htmlspecialchars(($o['package_amount'] ?? '').' '.($o['currency'] ?? '')) ?>
                         · ID: <span style="font-family:monospace"><?= htmlspecialchars($o['game_user_id']) ?></span>
                         · <?= date('d/m/Y H:i', strtotime($o['created_at'])) ?>
                     </div>
@@ -182,11 +183,12 @@ require_once 'includes/header.php';
         </div>
 
         <!-- Quick actions -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.875rem">
             <?php foreach ([
                 ['🎮','Top Up Game','Pilih game & paket','products.php','var(--blue)'],
+                ['📦','Cek Status','Lacak pesananmu','tracking.php','var(--cyan)'],
                 ['💬','Chat Admin','Tanya atau konfirmasi','contact.php','#25D366'],
-                ['❓','FAQ','Pertanyaan umum','faq.php','var(--purple)'],
+                ['❓','FAQ','Pertanyaan umum','faq.php','#8b5cf6'],
             ] as [$ic,$title,$desc,$url,$col]): ?>
             <a href="<?= $url ?>" style="background:var(--bg2);border:1px solid var(--border);
                 border-radius:var(--radius-lg);padding:1.25rem;text-decoration:none;

@@ -115,10 +115,10 @@ require_once 'includes/header.php';
 
         <div class="products-grid gs-reveal-stagger">
             <?php foreach ($games as $game):
-                $min_price = min(array_column($game['packages'], 'price'));
-                $badge_class = match($game['badge']) {
-                    'Hot' => 'hot', 'Baru' => 'new', 'Populer' => 'popular', default => ''
-                };
+                $pkgs      = $game['packages'] ?? [];
+                $min_price = !empty($pkgs) ? min(array_column($pkgs, 'price')) : ($game['min_price'] ?? 0);
+                $badge_map = ['Hot'=>'hot','Baru'=>'new','Populer'=>'popular','Terlaris'=>'popular'];
+                $badge_class = $badge_map[$game['badge'] ?? ''] ?? '';
             ?>
             <div class="product-card" data-cat="<?= $game['category'] ?>"
                  onclick="location.href='detail.php?slug=<?= $game['slug'] ?>'">

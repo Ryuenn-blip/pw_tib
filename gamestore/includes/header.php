@@ -27,8 +27,9 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
         </a>
 
         <div class="nav-search">
-            <input type="text" id="searchInput" placeholder="Cari game, item, atau produk..." autocomplete="off">
-            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Cari game..." autocomplete="off"
+                   onkeydown="if(event.key==='Enter'&&this.value.trim())location.href='search.php?q='+encodeURIComponent(this.value.trim())">
+            <span class="search-icon" onclick="const v=document.getElementById('searchInput').value.trim();if(v)location.href='search.php?q='+encodeURIComponent(v)">🔍</span>
             <div class="search-dropdown" id="searchDropdown"></div>
         </div>
 
@@ -50,7 +51,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
             <a href="cart.php" class="btn-cart">
                 🛒 <span class="cart-badge" id="cartBadge">0</span>
             </a>
-            <?php if (isset($_SESSION['user_id'])): ?>
+            <?php if (function_exists('user_logged_in') && user_logged_in()): ?>
             <a href="dashboard.php" class="btn-login" style="display:flex;align-items:center;gap:.4rem">
                 <span style="width:24px;height:24px;border-radius:50%;
                     background:linear-gradient(135deg,var(--blue),var(--cyan));

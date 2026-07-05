@@ -74,12 +74,12 @@ function generate_id(string $prefix = 'id_'): string {
 function get_active_products(): array {
     return db_rows("
         SELECT p.*, c.name AS category_name,
-               MIN(pk.price) AS min_price,
-               COUNT(pk.id)  AS package_count
+               COALESCE(MIN(pk.price), 0) AS min_price,
+               COUNT(pk.id)               AS package_count
         FROM   products p
         JOIN   categories c   ON c.id = p.category_id
-        LEFT JOIN packages pk ON pk.product_id = p.id AND pk.status = 'active'
-        WHERE  p.status = 'active'
+        LEFT JOIN packages pk ON pk.product_id = p.id AND pk.is_active = 1
+        WHERE  p.is_active = 1
         GROUP BY p.id
         ORDER BY p.sort_order, p.id
     ");
@@ -89,12 +89,12 @@ function get_product_by_slug(string $slug): ?array {
         SELECT p.*, c.name AS category_name
         FROM   products p
         JOIN   categories c ON c.id = p.category_id
-        WHERE  p.slug = ? AND p.status = 'active'
+        WHERE  p.slug = ? AND p.is_active = 1
     ", [$slug]);
     if (!$product) return null;
     $product['packages'] = db_rows("
         SELECT * FROM packages
-        WHERE  product_id = ? AND status = 'active'
+        WHERE  product_id = ? AND is_active = 1
         ORDER BY price ASC
     ", [$product['id']]);
     return $product;
@@ -108,16 +108,26 @@ function get_payment_methods_db(): array {
 function validate_promo(string $code, int $price): array {
     $promo = db_row("
         SELECT * FROM promo_codes
-        WHERE  code = ? AND status = 'active'
-          AND  valid_from <= CURDATE() AND valid_until >= CURDATE()
+        WHERE code = ? AND is_active = 1
+          AND (valid_from IS NULL OR valid_from <= CURDATE())
+          AND (valid_until IS NULL OR valid_until >= CURDATE())
     ", [strtoupper($code)]);
-    if (!$promo)                              return ['valid'=>false,'msg'=>'Kode promo tidak valid'];
-    if ($promo['max_use']>0 && $promo['used_count']>=$promo['max_use'])
-                                              return ['valid'=>false,'msg'=>'Kode promo sudah habis'];
-    if ($price < (int)$promo['min_purchase']) return ['valid'=>false,'msg'=>'Minimal pembelian tidak terpenuhi'];
-    $disc = (int)round($price * $promo['discount_pct'] / 100);
-    return ['valid'=>true,'discount'=>$disc,'pct'=>$promo['discount_pct'],
-            'msg'=>"Diskon {$promo['discount_pct']}% berhasil!"];
+    if (!$promo) return ['valid'=>false,'msg'=>'Kode promo tidak valid atau kedaluwarsa'];
+    if ($promo['max_use'] > 0 && $promo['used_count'] >= $promo['max_use'])
+        return ['valid'=>false,'msg'=>'Kuota kode promo sudah habis'];
+    if ($price < (int)$promo['min_purchase'])
+        return ['valid'=>false,'msg'=>'Minimal pembelian '.formatRupiah((int)$promo['min_purchase'])];
+    // Hitung diskon
+    if ($promo['type'] === 'percent') {
+        $disc = (int)round($price * $promo['value'] / 100);
+        if (!empty($promo['max_discount'])) $disc = min($disc, (int)$promo['max_discount']);
+        $msg = "Diskon {$promo['value']}% berhasil diterapkan!";
+    } else {
+        $disc = (int)$promo['value'];
+        $msg  = 'Diskon '.formatRupiah($disc).' berhasil diterapkan!';
+    }
+    $disc = min($disc, $price);
+    return ['valid'=>true,'discount'=>$disc,'msg'=>$msg,'code'=>strtoupper($code)];
 }
 
 // ── USER AUTH FUNCTIONS ───────────────────────────────────────
@@ -134,25 +144,87 @@ function user_register(string $name, string $email, string $phone, string $passw
     return ['success' => true, 'msg' => 'Akun berhasil dibuat!'];
 }
 
-function user_login(string $email, string $password): array {
+function user_login(string $email, string $password, bool $remember = false): array {
     $user = db_row('SELECT * FROM customers WHERE email = ? AND is_active = 1', [$email]);
-    if (!$user || !password_verify($password, $user['password'])) {
+
+    if (!$user) {
         return ['success' => false, 'msg' => 'Email atau password salah.'];
     }
+
+    // ── Rate limiting: cek apakah akun terkunci ───────────────
+    if (!empty($user['locked_until']) && strtotime($user['locked_until']) > time()) {
+        $remaining = ceil((strtotime($user['locked_until']) - time()) / 60);
+        return ['success' => false, 'msg' => "Akun terkunci sementara karena terlalu banyak percobaan gagal. Coba lagi dalam {$remaining} menit."];
+    }
+
+    if (!password_verify($password, $user['password'])) {
+        // Tambah hitungan gagal
+        $attempts = (int)($user['failed_attempts'] ?? 0) + 1;
+        if ($attempts >= 5) {
+            db_exec("UPDATE customers SET failed_attempts=0, locked_until=DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id=?", [$user['id']]);
+            return ['success' => false, 'msg' => 'Terlalu banyak percobaan gagal. Akun dikunci selama 15 menit.'];
+        }
+        db_exec("UPDATE customers SET failed_attempts=? WHERE id=?", [$attempts, $user['id']]);
+        $left = 5 - $attempts;
+        return ['success' => false, 'msg' => "Email atau password salah. Sisa percobaan: {$left}."];
+    }
+
+    // ── Login berhasil: reset percobaan gagal, catat waktu ────
+    db_exec("UPDATE customers SET failed_attempts=0, locked_until=NULL, last_login=NOW() WHERE id=?", [$user['id']]);
+
     // Set session
     $_SESSION['user_id']    = $user['id'];
     $_SESSION['user_name']  = $user['name'];
     $_SESSION['user_email'] = $user['email'];
     $_SESSION['user_phone'] = $user['phone'];
+
+    // ── Remember Me: set cookie token 30 hari ─────────────────
+    if ($remember) {
+        $token = bin2hex(random_bytes(32));
+        db_exec("UPDATE customers SET remember_token=? WHERE id=?", [hash('sha256', $token), $user['id']]);
+        setcookie('gs_remember', $user['id'] . ':' . $token, [
+            'expires'  => time() + (86400 * 30),
+            'path'     => '/',
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
     return ['success' => true, 'user' => $user];
 }
 
 function user_logout(): void {
+    // Hapus remember token dari DB & cookie
+    if (!empty($_SESSION['user_id'])) {
+        db_exec("UPDATE customers SET remember_token=NULL WHERE id=?", [$_SESSION['user_id']]);
+    }
+    if (isset($_COOKIE['gs_remember'])) {
+        setcookie('gs_remember', '', time() - 3600, '/');
+    }
     unset($_SESSION['user_id'], $_SESSION['user_name'], $_SESSION['user_email'], $_SESSION['user_phone']);
 }
 
 function user_logged_in(): bool {
-    return !empty($_SESSION['user_id']);
+    if (!empty($_SESSION['user_id'])) return true;
+
+    // ── Coba auto-login dari cookie "Remember Me" ─────────────
+    if (!empty($_COOKIE['gs_remember'])) {
+        [$uid, $token] = array_pad(explode(':', $_COOKIE['gs_remember'], 2), 2, '');
+        if ($uid && $token) {
+            $user = db_row("SELECT * FROM customers WHERE id=? AND remember_token=? AND is_active=1",
+                [(int)$uid, hash('sha256', $token)]);
+            if ($user) {
+                $_SESSION['user_id']    = $user['id'];
+                $_SESSION['user_name']  = $user['name'];
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['user_phone'] = $user['phone'];
+                return true;
+            }
+            // Token tidak valid, hapus cookie basi
+            setcookie('gs_remember', '', time() - 3600, '/');
+        }
+    }
+    return false;
 }
 
 function user_get_orders(int $user_id): array {
@@ -169,27 +241,20 @@ function user_require_login(): void {
     }
 }
 
-// ── PROMO VALIDATE (fix field name) ──────────────────────────
-function validate_promo_code(string $code, int $price): array {
-    $promo = db_row("
-        SELECT * FROM promo_codes
-        WHERE code = ? AND is_active = 1
-          AND (valid_until IS NULL OR valid_until >= CURDATE())
-    ", [strtoupper($code)]);
-    if (!$promo) return ['valid'=>false,'msg'=>'Kode promo tidak valid atau sudah kedaluwarsa'];
-    if ($promo['max_use'] && $promo['used_count'] >= $promo['max_use'])
-        return ['valid'=>false,'msg'=>'Kuota kode promo sudah habis'];
-    if ($price < (int)$promo['min_purchase'])
-        return ['valid'=>false,'msg'=>'Minimal pembelian Rp '.number_format($promo['min_purchase'],0,',','.')];
-    // Hitung diskon
-    if ($promo['type'] === 'percent') {
-        $disc = (int)round($price * $promo['value'] / 100);
-        if ($promo['max_discount']) $disc = min($disc, (int)$promo['max_discount']);
-        $msg = "Diskon {$promo['value']}% berhasil diterapkan!";
-    } else {
-        $disc = (int)$promo['value'];
-        $msg  = 'Diskon Rp '.number_format($disc,0,',','.').' berhasil diterapkan!';
+
+// ── ACTIVITY LOGGING ─────────────────────────────────────────
+function log_activity(string $action, string $detail = ''): void {
+    try {
+        $admin_id = $_SESSION['admin_id'] ?? null;
+        $ip       = $_SERVER['HTTP_X_FORWARDED_FOR']
+                 ?? $_SERVER['REMOTE_ADDR']
+                 ?? null;
+        db_exec(
+            "INSERT INTO activity_logs (admin_id, action, detail, ip, created_at) VALUES (?,?,?,?,NOW())",
+            [$admin_id, $action, $detail ?: null, $ip]
+        );
+    } catch (\Throwable $e) {
+        // Jangan crash aplikasi jika log gagal
+        error_log('[LOG_ACTIVITY ERROR] ' . $e->getMessage());
     }
-    $disc = min($disc, $price); // tidak boleh melebihi harga
-    return ['valid'=>true,'discount'=>$disc,'msg'=>$msg,'code'=>strtoupper($code)];
 }

@@ -4,359 +4,402 @@ requireLogin();
 $page_title  = 'Pengaturan';
 $active_menu = 'settings';
 
-// Handle form save (demo)
-$saved = false;
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_section'])) {
-    $saved = $_POST['save_section'];
+// ── Handle save ───────────────────────────────────────────────
+$saved_section = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['section'])) {
+    $section = $_POST['section'];
+
+    // Fungsi simpan setting ke DB
+    $save = function(string $key, string $val) {
+        db_exec("INSERT INTO settings (`key`,`value`) VALUES (?,?)
+                 ON DUPLICATE KEY UPDATE `value`=VALUES(`value`), updated_at=NOW()",
+                [$key, $val]);
+    };
+
+    switch ($section) {
+        case 'general':
+            $save('site_name',        trim($_POST['site_name']        ?? ''));
+            $save('site_tagline',     trim($_POST['site_tagline']     ?? ''));
+            $save('admin_email',      trim($_POST['admin_email']      ?? ''));
+            $save('wa_number',        preg_replace('/\D/','',trim($_POST['wa_number']??'')));
+            $save('site_description', trim($_POST['site_description'] ?? ''));
+            $save('maintenance_mode', !empty($_POST['maintenance_mode']) ? '1' : '0');
+            $save('always_open',      !empty($_POST['always_open'])      ? '1' : '0');
+            break;
+        case 'payment':
+            $methods = $_POST['methods'] ?? [];
+            $save('active_payments', implode(',', $methods));
+            foreach ($_POST['pm_number'] ?? [] as $name => $num) {
+                db_exec("UPDATE payment_methods SET number=?, account_name=? WHERE name=?",
+                    [trim($num), trim($_POST['pm_name'][$name]??''), $name]);
+            }
+            break;
+        case 'security':
+            $old = trim($_POST['old_pass'] ?? '');
+            $new = trim($_POST['new_pass'] ?? '');
+            $con = trim($_POST['confirm_pass'] ?? '');
+            if ($old && $new && $new === $con) {
+                $admin = db_row("SELECT password FROM admins WHERE id=?", [$_SESSION['admin_id']??1]);
+                if ($admin && password_verify($old, $admin['password'])) {
+                    db_exec("UPDATE admins SET password=? WHERE id=?",
+                        [password_hash($new, PASSWORD_DEFAULT), $_SESSION['admin_id']??1]);
+                } else {
+                    $_SESSION['settings_error'] = 'Password lama tidak cocok!';
+                }
+            }
+            $save('brute_force_protect', !empty($_POST['brute_force_protect']) ? '1':'0');
+            $save('session_timeout',     (int)($_POST['session_timeout']??120).'');
+            break;
+        case 'notification':
+            $save('notif_new_order', !empty($_POST['notif_new_order']) ? '1':'0');
+            $save('notif_payment',   !empty($_POST['notif_payment'])   ? '1':'0');
+            $save('notif_chat',      !empty($_POST['notif_chat'])      ? '1':'0');
+            $save('notif_email',     trim($_POST['notif_email']        ?? ''));
+            break;
+    }
+
+    $saved_section = $section;
+    log_activity('settings_update', "Pengaturan '$section' diperbarui oleh admin");
+    header('Location: settings.php?tab='.$section.'&saved=1');
+    exit;
 }
+
+// ── Load all settings ─────────────────────────────────────────
+$all_settings = [];
+foreach (db_rows("SELECT `key`,`value` FROM settings") as $row)
+    $all_settings[$row['key']] = $row['value'];
+$s = fn(string $k, string $def='') => $all_settings[$k] ?? $def;
+
+// Load payment methods from DB
+$pay_methods = db_rows("SELECT * FROM payment_methods ORDER BY sort_order");
+
+$active_tab = $_GET['tab'] ?? 'general';
+$saved      = !empty($_GET['saved']);
+$err        = $_SESSION['settings_error'] ?? null;
+unset($_SESSION['settings_error']);
 
 require_once 'includes/admin_layout.php';
 ?>
+<style>
+.settings-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
+.stab{padding:.625rem 1.125rem;font-size:.875rem;font-weight:600;cursor:pointer;text-decoration:none;
+    color:var(--gray);border-bottom:2px solid transparent;transition:var(--tr)}
+.stab:hover{color:var(--white)}
+.stab.active{color:var(--cyan);border-bottom-color:var(--blue)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;
+    padding:.75rem;background:var(--bg3);border-radius:var(--radius);margin-bottom:.5rem}
+.toggle-label .title{font-weight:600;font-size:.875rem}
+.toggle-label .desc{font-size:.73rem;color:var(--gray);margin-top:.1rem}
+.toggle-inp{width:18px;height:18px;accent-color:var(--blue);cursor:pointer}
+</style>
 
 <div class="page-content">
 
-    <?php if ($saved): ?>
-    <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:var(--radius);
-        padding:.875rem 1.25rem;margin-bottom:1.25rem;color:var(--success);font-weight:600;font-size:.875rem">
-        ✅ Pengaturan <strong><?= htmlspecialchars($saved) ?></strong> berhasil disimpan!
-    </div>
-    <?php endif; ?>
+<?php if ($saved): ?>
+<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:var(--radius);
+    padding:.875rem 1.25rem;margin-bottom:1.25rem;color:var(--success);font-size:.875rem;font-weight:600">
+    ✅ Pengaturan berhasil disimpan!
+</div>
+<?php endif; ?>
+<?php if ($err): ?>
+<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:var(--radius);
+    padding:.875rem 1.25rem;margin-bottom:1.25rem;color:var(--danger);font-size:.875rem">
+    ⚠️ <?= htmlspecialchars($err) ?>
+</div>
+<?php endif; ?>
 
-    <!-- Tab navigation -->
-    <div style="display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0">
-        <?php
-        $tabs = ['umum'=>'⚙️ Umum','pembayaran'=>'💳 Pembayaran','notifikasi'=>'🔔 Notifikasi','keamanan'=>'🔒 Keamanan','tampilan'=>'🎨 Tampilan'];
-        $active_tab = $_GET['tab'] ?? 'umum';
-        foreach ($tabs as $key => $label):
-        ?>
-        <a href="?tab=<?= $key ?>"
-           style="padding:.6rem 1rem;font-size:.85rem;font-weight:600;border-bottom:2px solid <?= $active_tab===$key ? 'var(--blue)' : 'transparent' ?>;
-                  color:<?= $active_tab===$key ? 'var(--cyan)' : 'var(--gray)' ?>;text-decoration:none;
-                  transition:.2s;white-space:nowrap">
-            <?= $label ?>
-        </a>
-        <?php endforeach; ?>
-    </div>
+<!-- Tabs -->
+<div class="settings-tabs">
+    <?php foreach ([
+        'general'=>'⚙️ Umum', 'payment'=>'💳 Pembayaran',
+        'notification'=>'🔔 Notifikasi', 'security'=>'🔒 Keamanan', 'display'=>'🎨 Tampilan'
+    ] as $key=>$lbl): ?>
+    <a href="?tab=<?= $key ?>" class="stab <?= $active_tab===$key?'active':'' ?>"><?= $lbl ?></a>
+    <?php endforeach; ?>
+</div>
 
-    <!-- ── TAB: UMUM ── -->
-    <?php if ($active_tab === 'umum'): ?>
-    <div class="settings-grid">
-        <form method="POST" action="?tab=umum">
-            <input type="hidden" name="save_section" value="Informasi Toko">
-            <div class="card">
-                <div class="card-header"><div class="card-title">🏪 Informasi Toko</div></div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Nama Toko</label>
-                        <input type="text" class="form-control" value="GameStore" name="site_name">
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Tagline</label>
-                        <input type="text" class="form-control" value="Top Up Game Terlengkap & Termurah" name="tagline">
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Email Admin</label>
-                        <input type="email" class="form-control" value="admin@gamestore.id" name="admin_email">
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Nomor WhatsApp (tanpa +)</label>
-                        <input type="text" class="form-control" value="6281234567890" name="wa_number">
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Deskripsi Toko</label>
-                        <textarea class="form-control" name="description" rows="3">Platform top up game terlengkap dan termurah di Indonesia. Proses instan, aman, dan terpercaya sejak 2020.</textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">💾 Simpan Perubahan</button>
-                </div>
+<?php if ($active_tab === 'general'): ?>
+<!-- ═══ GENERAL ═══ -->
+<form method="POST">
+<input type="hidden" name="section" value="general">
+<div class="settings-grid">
+    <div class="card">
+        <div class="card-header"><div class="card-title">🏪 Informasi Toko</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
+            <?php foreach ([
+                ['site_name','Nama Toko','GameStore','text'],
+                ['site_tagline','Tagline','Top Up Terlengkap & Termurah','text'],
+                ['admin_email','Email Admin','admin@gamestore.id','email'],
+                ['wa_number','Nomor WhatsApp (tanpa +)','6281234567890','text'],
+            ] as [$key,$lbl,$ph,$type]): ?>
+            <div class="form-group" style="margin:0">
+                <label class="form-label"><?= $lbl ?></label>
+                <input type="<?= $type ?>" name="<?= $key ?>" class="form-control"
+                       placeholder="<?= $ph ?>" value="<?= htmlspecialchars($s($key,$ph)) ?>">
             </div>
-        </form>
-
-        <form method="POST" action="?tab=umum">
-            <input type="hidden" name="save_section" value="Jam Operasional">
-            <div class="card">
-                <div class="card-header"><div class="card-title">⏰ Jam Operasional</div></div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;background:var(--bg3);border-radius:var(--radius)">
-                        <div>
-                            <div style="font-weight:700;font-size:.875rem">Toko Online 24 Jam</div>
-                            <div style="font-size:.75rem;color:var(--gray)">Customer bisa order kapanpun</div>
-                        </div>
-                        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
-                            <input type="checkbox" checked style="opacity:0;width:0;height:0">
-                            <span style="position:absolute;inset:0;background:var(--blue);border-radius:12px;
-                                display:flex;align-items:center;padding-left:3px">
-                                <span style="width:18px;height:18px;background:#fff;border-radius:50%;transform:translateX(20px)"></span>
-                            </span>
-                        </label>
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Pesan Offline (jika toko tutup)</label>
-                        <textarea class="form-control" rows="2">Maaf, kami sedang offline. Silakan order kembali besok ya! 🙏</textarea>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.625rem">
-                        <div class="form-group" style="margin:0">
-                            <label class="form-label">Jam Buka</label>
-                            <input type="time" class="form-control" value="08:00">
-                        </div>
-                        <div class="form-group" style="margin:0">
-                            <label class="form-label">Jam Tutup</label>
-                            <input type="time" class="form-control" value="23:00">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">💾 Simpan</button>
-                </div>
+            <?php endforeach; ?>
+            <div class="form-group" style="margin:0">
+                <label class="form-label">Deskripsi Toko</label>
+                <textarea name="site_description" class="form-control" rows="3"><?= htmlspecialchars($s('site_description')) ?></textarea>
             </div>
-        </form>
+        </div>
+        <div class="modal-footer"><button type="submit" class="btn btn-primary">💾 Simpan</button></div>
     </div>
 
-    <!-- ── TAB: PEMBAYARAN ── -->
-    <?php elseif ($active_tab === 'pembayaran'): ?>
-    <form method="POST" action="?tab=pembayaran">
-        <input type="hidden" name="save_section" value="Metode Pembayaran">
-        <div class="card" style="margin-bottom:1rem">
-            <div class="card-header"><div class="card-title">💳 Metode Pembayaran Aktif</div></div>
-            <div class="card-body">
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem">
-                    <?php
-                    $methods = [
-                        ['name'=>'DANA',         'color'=>'#00AAFF','active'=>true],
-                        ['name'=>'OVO',          'color'=>'#6B3FA0','active'=>true],
-                        ['name'=>'GoPay',        'color'=>'#00AED6','active'=>true],
-                        ['name'=>'ShopeePay',    'color'=>'#EE4D2D','active'=>true],
-                        ['name'=>'Transfer BCA', 'color'=>'#005BAA','active'=>true],
-                        ['name'=>'Transfer BRI', 'color'=>'#0066AE','active'=>false],
-                        ['name'=>'Transfer Mandiri','color'=>'#003087','active'=>false],
-                        ['name'=>'QRIS',         'color'=>'#E31837','active'=>true],
-                        ['name'=>'LinkAja',      'color'=>'#E4202F','active'=>false],
-                    ];
-                    foreach ($methods as $m):
-                    ?>
-                    <div style="display:flex;align-items:center;justify-content:space-between;
-                        padding:.75rem;background:var(--bg3);border-radius:var(--radius);
-                        border:1px solid <?= $m['active'] ? $m['color'].'44' : 'var(--border)' ?>">
-                        <div style="display:flex;align-items:center;gap:.5rem">
-                            <div style="width:10px;height:10px;border-radius:50%;background:<?= $m['color'] ?>"></div>
-                            <span style="font-size:.85rem;font-weight:600"><?= $m['name'] ?></span>
-                        </div>
-                        <input type="checkbox" name="methods[]" value="<?= $m['name'] ?>"
-                               <?= $m['active']?'checked':'' ?>
-                               style="width:16px;height:16px;accent-color:var(--blue);cursor:pointer">
-                    </div>
-                    <?php endforeach; ?>
+    <div class="card">
+        <div class="card-header"><div class="card-title">⚙️ Pengaturan Umum</div></div>
+        <div class="card-body">
+            <div class="toggle-row">
+                <div class="toggle-label">
+                    <div class="title">Mode Maintenance</div>
+                    <div class="desc">Website tidak dapat diakses pengunjung</div>
                 </div>
+                <input type="checkbox" name="maintenance_mode" class="toggle-inp"
+                       <?= $s('maintenance_mode')==='1'?'checked':'' ?>>
             </div>
-        </div>
-        <div class="settings-grid">
-            <div class="card">
-                <div class="card-header"><div class="card-title">🏦 Rekening Bank</div></div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-                    <?php foreach (['BCA'=>'005BAA','Mandiri'=>'003087','BRI'=>'0066AE'] as $bank=>$clr): ?>
-                    <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;border-left:3px solid #<?= $clr ?>">
-                        <div style="font-weight:700;font-size:.85rem;margin-bottom:.5rem"><?= $bank ?></div>
-                        <input type="text" class="form-control" placeholder="No. Rekening <?= $bank ?>" style="margin-bottom:.4rem">
-                        <input type="text" class="form-control" placeholder="Atas Nama">
-                    </div>
-                    <?php endforeach; ?>
+            <div class="toggle-row">
+                <div class="toggle-label">
+                    <div class="title">Toko 24 Jam</div>
+                    <div class="desc">Customer bisa order kapanpun</div>
                 </div>
+                <input type="checkbox" name="always_open" class="toggle-inp"
+                       <?= $s('always_open','1')==='1'?'checked':'' ?>>
             </div>
-            <div class="card">
-                <div class="card-header"><div class="card-title">📱 E-Wallet</div></div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
-                    <?php foreach (['DANA'=>'00AAFF','OVO'=>'6B3FA0','GoPay'=>'00AED6','ShopeePay'=>'EE4D2D'] as $ew=>$clr): ?>
-                    <div style="background:var(--bg3);border-radius:var(--radius);padding:1rem;border-left:3px solid #<?= $clr ?>">
-                        <div style="font-weight:700;font-size:.85rem;margin-bottom:.5rem"><?= $ew ?></div>
-                        <input type="text" class="form-control" placeholder="Nomor <?= $ew ?>">
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-        <div style="margin-top:1rem;display:flex;justify-content:flex-end">
-            <button type="submit" class="btn btn-primary">💾 Simpan Pengaturan Pembayaran</button>
-        </div>
-    </form>
-
-    <!-- ── TAB: NOTIFIKASI ── -->
-    <?php elseif ($active_tab === 'notifikasi'): ?>
-    <form method="POST" action="?tab=notifikasi">
-        <input type="hidden" name="save_section" value="Notifikasi">
-        <div class="settings-grid">
-            <div class="card">
-                <div class="card-header"><div class="card-title">🔔 Notifikasi Admin</div></div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
-                    <?php
-                    $notifs = [
-                        ['label'=>'Order Baru Masuk',   'desc'=>'Notif saat ada pesanan baru', 'on'=>true],
-                        ['label'=>'Pembayaran Diterima', 'desc'=>'Saat customer konfirmasi bayar','on'=>true],
-                        ['label'=>'Pesan Chat Baru',     'desc'=>'Notif saat ada chat masuk',   'on'=>true],
-                        ['label'=>'Order Dibatalkan',    'desc'=>'Saat customer batalkan order', 'on'=>false],
-                        ['label'=>'Laporan Harian',      'desc'=>'Ringkasan performa tiap hari', 'on'=>true],
-                    ];
-                    foreach ($notifs as $n):
-                    ?>
-                    <div style="display:flex;justify-content:space-between;align-items:center;
-                        padding:.75rem;background:var(--bg3);border-radius:var(--radius)">
-                        <div>
-                            <div style="font-weight:600;font-size:.875rem"><?= $n['label'] ?></div>
-                            <div style="font-size:.73rem;color:var(--gray)"><?= $n['desc'] ?></div>
-                        </div>
-                        <label style="cursor:pointer;display:flex;align-items:center;gap:.5rem">
-                            <input type="checkbox" <?= $n['on']?'checked':'' ?>
-                                   style="width:16px;height:16px;accent-color:var(--blue)">
-                        </label>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><div class="card-title">📧 Email Notifikasi</div></div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Email Tujuan Notifikasi</label>
-                        <input type="email" class="form-control" value="admin@gamestore.id">
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Email CC (opsional)</label>
-                        <input type="email" class="form-control" placeholder="email@lain.com">
-                    </div>
-                    <div style="background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);border-radius:var(--radius);padding:.875rem;font-size:.8rem;color:var(--gray)">
-                        💡 Pastikan email SMTP sudah dikonfigurasi di server untuk pengiriman email.
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div style="margin-top:1rem;display:flex;justify-content:flex-end">
-            <button type="submit" class="btn btn-primary">💾 Simpan Notifikasi</button>
-        </div>
-    </form>
-
-    <!-- ── TAB: KEAMANAN ── -->
-    <?php elseif ($active_tab === 'keamanan'): ?>
-    <div class="settings-grid">
-        <form method="POST" action="?tab=keamanan">
-            <input type="hidden" name="save_section" value="Password Admin">
-            <div class="card">
-                <div class="card-header"><div class="card-title">🔒 Ganti Password Admin</div></div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-control" value="admin" name="username">
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Password Lama</label>
-                        <input type="password" class="form-control" name="old_pass" placeholder="Password saat ini">
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Password Baru</label>
-                        <input type="password" class="form-control" name="new_pass" placeholder="Min. 8 karakter">
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Konfirmasi Password Baru</label>
-                        <input type="password" class="form-control" name="confirm_pass" placeholder="Ulangi password baru">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">🔐 Ganti Password</button>
-                </div>
-            </div>
-        </form>
-        <div class="card">
-            <div class="card-header"><div class="card-title">🛡️ Keamanan Tambahan</div></div>
-            <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
-                <?php
-                $sec = [
-                    ['label'=>'Proteksi Brute Force','desc'=>'Blokir IP setelah 5x login gagal','on'=>true],
-                    ['label'=>'Session Timeout',     'desc'=>'Auto logout setelah 2 jam tidak aktif','on'=>true],
-                    ['label'=>'Log Aktivitas Admin', 'desc'=>'Simpan semua aktivitas login & aksi','on'=>true],
-                    ['label'=>'Proteksi CSRF',        'desc'=>'Token validasi setiap form submit','on'=>true],
-                ];
-                foreach ($sec as $s):
-                ?>
-                <div style="display:flex;justify-content:space-between;align-items:center;
-                    padding:.75rem;background:var(--bg3);border-radius:var(--radius)">
-                    <div>
-                        <div style="font-weight:600;font-size:.875rem"><?= $s['label'] ?></div>
-                        <div style="font-size:.73rem;color:var(--gray)"><?= $s['desc'] ?></div>
-                    </div>
-                    <input type="checkbox" <?= $s['on']?'checked':'' ?>
-                           style="width:16px;height:16px;accent-color:var(--blue)">
-                </div>
-                <?php endforeach; ?>
-                <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);
-                    border-radius:var(--radius);padding:.875rem">
-                    <div style="font-weight:700;font-size:.82rem;color:var(--danger);margin-bottom:.4rem">⚠️ Zona Berbahaya</div>
-                    <button class="btn btn-danger btn-sm" onclick="if(confirm('Reset semua data sesi? Admin akan logout.')) showToast('✅ Semua sesi direset!')">
-                        Reset Semua Sesi Login
-                    </button>
-                </div>
+            <div class="form-group" style="margin-top:.875rem">
+                <label class="form-label">Timeout Order (menit)</label>
+                <input type="number" name="order_timeout" class="form-control" min="5" max="1440"
+                       value="<?= htmlspecialchars($s('order_timeout','30')) ?>">
             </div>
         </div>
     </div>
+</div>
+</form>
 
-    <!-- ── TAB: TAMPILAN ── -->
-    <?php elseif ($active_tab === 'tampilan'): ?>
-    <form method="POST" action="?tab=tampilan">
-        <input type="hidden" name="save_section" value="Tampilan">
-        <div class="settings-grid">
-            <div class="card">
-                <div class="card-header"><div class="card-title">🎨 Warna & Tema</div></div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Warna Utama</label>
-                        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-                            <?php foreach (['#2563EB'=>'Biru','#8B5CF6'=>'Ungu','#10B981'=>'Hijau','#EF4444'=>'Merah','#F59E0B'=>'Kuning'] as $col=>$lbl): ?>
-                            <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem;cursor:pointer">
-                                <div style="width:36px;height:36px;border-radius:50%;background:<?= $col ?>;
-                                    border:3px solid <?= $col==='#2563EB'?'#fff':'transparent' ?>;
-                                    box-shadow:0 0 0 2px <?= $col==='#2563EB'?$col:'transparent' ?>"></div>
-                                <span style="font-size:.65rem;color:var(--gray)"><?= $lbl ?></span>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Mode Tampilan</label>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-                            <div style="padding:.875rem;background:var(--bg);border:2px solid var(--blue);border-radius:var(--radius);text-align:center;cursor:pointer">
-                                <div style="font-size:1.25rem">🌙</div>
-                                <div style="font-size:.8rem;font-weight:700;margin-top:.3rem">Dark Mode</div>
-                                <div style="font-size:.7rem;color:var(--cyan)">Aktif</div>
-                            </div>
-                            <div style="padding:.875rem;background:#f8fafc;border:2px solid var(--border);border-radius:var(--radius);text-align:center;cursor:pointer;opacity:.5">
-                                <div style="font-size:1.25rem">☀️</div>
-                                <div style="font-size:.8rem;font-weight:700;margin-top:.3rem;color:#111">Light Mode</div>
-                                <div style="font-size:.7rem;color:#666">Segera Hadir</div>
-                            </div>
-                        </div>
-                    </div>
+<?php elseif ($active_tab === 'payment'): ?>
+<!-- ═══ PAYMENT ═══ -->
+<form method="POST">
+<input type="hidden" name="section" value="payment">
+<div class="card" style="margin-bottom:1rem">
+    <div class="card-header"><div class="card-title">💳 Metode Aktif</div></div>
+    <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.625rem">
+            <?php foreach ($pay_methods as $pm): ?>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;
+                background:var(--bg3);border-radius:var(--radius);
+                border:1px solid <?= $pm['status']==='active'?$pm['color'].'44':'var(--border)' ?>">
+                <div style="display:flex;align-items:center;gap:.4rem">
+                    <div style="width:9px;height:9px;border-radius:50%;background:<?= $pm['color'] ?>"></div>
+                    <span style="font-size:.85rem;font-weight:600"><?= htmlspecialchars($pm['name']) ?></span>
+                </div>
+                <input type="checkbox" name="methods[]" value="<?= $pm['id'] ?>"
+                       <?= $pm['status']==='active'?'checked':'' ?>
+                       class="toggle-inp">
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+
+<div class="settings-grid">
+    <!-- E-Wallet numbers -->
+    <div class="card">
+        <div class="card-header"><div class="card-title">📱 Nomor E-Wallet</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+            <?php foreach (array_filter($pay_methods, fn($m)=>$m['type']==='ewallet') as $pm): ?>
+            <div style="background:var(--bg3);border-radius:var(--radius);padding:.875rem;border-left:3px solid <?= $pm['color'] ?>">
+                <div style="font-weight:700;font-size:.85rem;margin-bottom:.5rem"><?= htmlspecialchars($pm['name']) ?></div>
+                <input type="text" name="pm_number[<?= htmlspecialchars($pm['name']) ?>]" class="form-control"
+                       placeholder="Nomor" value="<?= htmlspecialchars($pm['number']??'') ?>" style="margin-bottom:.375rem">
+                <input type="text" name="pm_name[<?= htmlspecialchars($pm['name']) ?>]" class="form-control"
+                       placeholder="Atas Nama" value="<?= htmlspecialchars($pm['account_name']??'') ?>">
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <!-- Bank numbers -->
+    <div class="card">
+        <div class="card-header"><div class="card-title">🏦 Rekening Bank</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+            <?php foreach (array_filter($pay_methods, fn($m)=>$m['type']==='bank') as $pm): ?>
+            <div style="background:var(--bg3);border-radius:var(--radius);padding:.875rem;border-left:3px solid <?= $pm['color'] ?>">
+                <div style="font-weight:700;font-size:.85rem;margin-bottom:.5rem"><?= htmlspecialchars($pm['name']) ?></div>
+                <input type="text" name="pm_number[<?= htmlspecialchars($pm['name']) ?>]" class="form-control"
+                       placeholder="No. Rekening" value="<?= htmlspecialchars($pm['number']??'') ?>" style="margin-bottom:.375rem">
+                <input type="text" name="pm_name[<?= htmlspecialchars($pm['name']) ?>]" class="form-control"
+                       placeholder="Atas Nama" value="<?= htmlspecialchars($pm['account_name']??'') ?>">
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+<div style="margin-top:1rem;display:flex;justify-content:flex-end">
+    <button type="submit" class="btn btn-primary">💾 Simpan Pembayaran</button>
+</div>
+</form>
+
+<?php elseif ($active_tab === 'notification'): ?>
+<!-- ═══ NOTIFICATION ═══ -->
+<form method="POST">
+<input type="hidden" name="section" value="notification">
+<div class="settings-grid">
+    <div class="card">
+        <div class="card-header"><div class="card-title">🔔 Notifikasi Admin</div></div>
+        <div class="card-body">
+            <?php foreach ([
+                ['notif_new_order','Order Baru Masuk','Notif saat ada pesanan baru'],
+                ['notif_payment',  'Pembayaran Masuk','Saat customer konfirmasi bayar'],
+                ['notif_chat',     'Chat Baru','Saat ada pesan live chat masuk'],
+            ] as [$key,$title,$desc]): ?>
+            <div class="toggle-row">
+                <div class="toggle-label">
+                    <div class="title"><?= $title ?></div>
+                    <div class="desc"><?= $desc ?></div>
+                </div>
+                <input type="checkbox" name="<?= $key ?>" class="toggle-inp"
+                       <?= $s($key,'1')==='1'?'checked':'' ?>>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><div class="card-title">📧 Email Notifikasi</div></div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-label">Email Tujuan</label>
+                <input type="email" name="notif_email" class="form-control"
+                       value="<?= htmlspecialchars($s('notif_email',$s('admin_email','admin@gamestore.id'))) ?>">
+            </div>
+            <div style="background:rgba(37,99,235,.07);border:1px solid rgba(37,99,235,.18);border-radius:var(--radius);
+                padding:.875rem;font-size:.8rem;color:var(--gray)">
+                💡 Pastikan konfigurasi SMTP sudah disetup di server untuk pengiriman email.
+            </div>
+        </div>
+    </div>
+</div>
+<div style="margin-top:1rem;display:flex;justify-content:flex-end">
+    <button type="submit" class="btn btn-primary">💾 Simpan Notifikasi</button>
+</div>
+</form>
+
+<?php elseif ($active_tab === 'security'): ?>
+<!-- ═══ SECURITY ═══ -->
+<form method="POST">
+<input type="hidden" name="section" value="security">
+<div class="settings-grid">
+    <div class="card">
+        <div class="card-header"><div class="card-title">🔒 Ganti Password Admin</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
+            <div class="form-group" style="margin:0">
+                <label class="form-label">Password Lama</label>
+                <input type="password" name="old_pass" class="form-control" placeholder="••••••••">
+            </div>
+            <div class="form-group" style="margin:0">
+                <label class="form-label">Password Baru (min. 8 karakter)</label>
+                <input type="password" name="new_pass" class="form-control" placeholder="••••••••">
+            </div>
+            <div class="form-group" style="margin:0">
+                <label class="form-label">Konfirmasi Password Baru</label>
+                <input type="password" name="confirm_pass" class="form-control" placeholder="••••••••">
+            </div>
+        </div>
+        <div class="modal-footer"><button type="submit" class="btn btn-primary">🔐 Ganti Password</button></div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><div class="card-title">🛡️ Keamanan Sistem</div></div>
+        <div class="card-body">
+            <?php foreach ([
+                ['brute_force_protect','Proteksi Brute Force','Blokir IP setelah 5x login gagal','1'],
+                ['session_log',        'Log Aktivitas Admin', 'Simpan semua aksi admin','1'],
+                ['csrf_protect',       'Proteksi CSRF',       'Token validasi form','1'],
+            ] as [$key,$title,$desc,$def]): ?>
+            <div class="toggle-row">
+                <div class="toggle-label">
+                    <div class="title"><?= $title ?></div>
+                    <div class="desc"><?= $desc ?></div>
+                </div>
+                <input type="checkbox" name="<?= $key ?>" class="toggle-inp"
+                       <?= $s($key,$def)==='1'?'checked':'' ?>>
+            </div>
+            <?php endforeach; ?>
+            <div class="form-group" style="margin-top:.875rem">
+                <label class="form-label">Session Timeout (menit)</label>
+                <input type="number" name="session_timeout" class="form-control" min="30" max="1440"
+                       value="<?= htmlspecialchars($s('session_timeout','120')) ?>">
+            </div>
+            <div style="margin-top:.875rem;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18);
+                border-radius:var(--radius);padding:.875rem">
+                <div style="font-weight:700;font-size:.82rem;color:var(--danger);margin-bottom:.5rem">⚠️ Zona Berbahaya</div>
+                <button type="button" class="btn btn-danger btn-sm"
+                        onclick="if(confirm('Reset semua sesi admin? Kamu akan logout.'))showToast('✅ Sesi direset!')">
+                    Reset Semua Sesi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+
+<?php else: ?>
+<!-- ═══ DISPLAY ═══ -->
+<div class="settings-grid">
+    <div class="card">
+        <div class="card-header"><div class="card-title">🎨 Warna & Tema</div></div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-label">Warna Utama</label>
+                <div style="display:flex;gap:.625rem;flex-wrap:wrap;align-items:center">
+                    <?php foreach (['#2563EB'=>'Biru','#8B5CF6'=>'Ungu','#10B981'=>'Hijau','#EF4444'=>'Merah','#F59E0B'=>'Kuning'] as $col=>$nm): ?>
+                    <div title="<?= $nm ?>" style="width:36px;height:36px;border-radius:50%;background:<?= $col ?>;cursor:pointer;
+                        border:3px solid <?= $s('accent_color','#2563EB')===$col?'#fff':'transparent' ?>;
+                        box-shadow:<?= $s('accent_color','#2563EB')===$col?'0 0 0 2px '.$col:'none' ?>;
+                        transition:.2s" onclick="this.parentNode.querySelectorAll('div').forEach(d=>d.style.border='3px solid transparent');
+                            this.style.border='3px solid #fff';this.style.boxShadow='0 0 0 2px <?= $col ?>'"></div>
+                    <?php endforeach; ?>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-header"><div class="card-title">🖼️ Logo & Branding</div></div>
-                <div class="card-body" style="display:flex;flex-direction:column;gap:.875rem">
-                    <div style="border:2px dashed var(--border);border-radius:var(--radius);padding:2rem;text-align:center;cursor:pointer"
-                         onclick="document.getElementById('logoUpload').click()">
-                        <div style="font-size:2rem;margin-bottom:.5rem">🎮</div>
-                        <div style="font-size:.85rem;color:var(--gray)">Klik untuk upload logo</div>
-                        <div style="font-size:.72rem;color:var(--gray2);margin-top:.25rem">PNG, JPG max 2MB</div>
-                        <input type="file" id="logoUpload" style="display:none" accept="image/*">
+            <div class="form-group">
+                <label class="form-label">Mode Tampilan</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.625rem">
+                    <div style="padding:.875rem;background:var(--bg);border:2px solid var(--blue);
+                        border-radius:var(--radius);text-align:center;cursor:pointer">
+                        <div style="font-size:1.25rem">🌙</div>
+                        <div style="font-size:.8rem;font-weight:700;margin-top:.3rem">Dark Mode</div>
+                        <div style="font-size:.7rem;color:var(--cyan)">Aktif</div>
                     </div>
-                    <div class="form-group" style="margin:0">
-                        <label class="form-label">Favicon URL</label>
-                        <input type="url" class="form-control" placeholder="https://...">
+                    <div style="padding:.875rem;background:#f8fafc;border:2px solid var(--border);
+                        border-radius:var(--radius);text-align:center;cursor:pointer;opacity:.5">
+                        <div style="font-size:1.25rem">☀️</div>
+                        <div style="font-size:.8rem;font-weight:700;margin-top:.3rem;color:#111">Light Mode</div>
+                        <div style="font-size:.7rem;color:#666">Segera Hadir</div>
                     </div>
                 </div>
             </div>
         </div>
-        <div style="margin-top:1rem;display:flex;justify-content:flex-end">
-            <button type="submit" class="btn btn-primary">💾 Simpan Tampilan</button>
+    </div>
+    <div class="card">
+        <div class="card-header"><div class="card-title">📊 Info Sistem</div></div>
+        <div class="card-body" style="font-size:.85rem">
+            <?php foreach ([
+                ['PHP Version', PHP_VERSION],
+                ['Server',      $_SERVER['SERVER_SOFTWARE']??'—'],
+                ['Disk Free',   round(disk_free_space('/')/1073741824, 1).' GB'],
+                ['DB Tables',   (int)(db_row("SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema=DATABASE()")['c']??0).' tabel'],
+                ['Total Orders',$total_orders.' order'],
+                ['Total Users', (int)(db_row("SELECT COUNT(*) AS c FROM customers")['c']??0).' pelanggan'],
+            ] as [$lbl,$val]): ?>
+            <div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(48,54,61,.4)">
+                <span style="color:var(--gray)"><?= $lbl ?></span>
+                <span style="font-weight:600;font-size:.82rem"><?= htmlspecialchars((string)$val) ?></span>
+            </div>
+            <?php endforeach; ?>
+            <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
+                <button class="btn btn-ghost btn-sm" onclick="showToast('✅ Cache dibersihkan!')">🗑 Clear Cache</button>
+                <a href="../database/gamestore.sql" download class="btn btn-ghost btn-sm">📥 Backup SQL</a>
+            </div>
         </div>
-    </form>
-    <?php endif; ?>
-
+    </div>
+</div>
+<?php endif; ?>
 </div>
 <?php require_once 'includes/admin_footer.php'; ?>

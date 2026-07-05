@@ -160,7 +160,7 @@ require_once 'includes/header.php';
                 </label>
             </div>
 
-            <button type="submit" class="btn-primary ripple-host"
+            <button type="submit" id="regBtn" class="btn-primary ripple-host"
                 style="width:100%;justify-content:center;padding:1rem;font-size:.95rem">
                 🚀 Buat Akun Sekarang
             </button>
@@ -217,7 +217,24 @@ function checkStrength(v) {
     label.textContent    = 'Kekuatan: ' + text;
     label.style.color    = color;
 }
+document.getElementById('regForm')?.addEventListener('submit', function(e) {
+    // Validasi dasar di client sebelum submit (server tetap validasi ulang)
+    const pass  = document.getElementById('regPass').value;
+    const pass2 = document.getElementById('regPass2').value;
+    if (pass !== pass2) {
+        e.preventDefault();
+        alert('⚠️ Konfirmasi password tidak cocok!');
+        return;
+    }
+    const btn = document.getElementById('regBtn');
+    btn.style.opacity = '.7';
+    btn.style.pointerEvents = 'none';
+    btn.innerHTML = '<span style="display:inline-block;animation:spin .8s linear infinite">⏳</span> Memproses...';
+});
 const gamesData = <?= json_encode(array_map(fn($g)=>['name'=>$g['name'],'slug'=>$g['slug'],'icon'=>$g['icon'],'currency'=>$g['currency']],$games)) ?>;
 </script>
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 
 <?php require_once 'includes/footer.php'; ?>

@@ -1,7 +1,7 @@
 <?php
 // $active_menu must be set before including this file
 // Load chat unread count
-require_once dirname(__DIR__) . '/chat/chat_engine.php';
+require_once dirname(__DIR__) . '/chat/chat_engine_db.php';
 $chat_unread_count = chat_total_unread_admin();
 
 $menu = [
@@ -9,8 +9,10 @@ $menu = [
     ['icon'=>'📋','label'=>'Pesanan',    'href'=>'orders.php',   'key'=>'orders'],
     ['icon'=>'🎮','label'=>'Produk',     'href'=>'products.php', 'key'=>'products'],
     ['icon'=>'👥','label'=>'Pelanggan',  'href'=>'customers.php','key'=>'customers'],
+    ['icon'=>'🎟️','label'=>'Promo',      'href'=>'promo.php',    'key'=>'promo'],
     ['icon'=>'💬','label'=>'Live Chat',  'href'=>'chat.php',     'key'=>'chat'],
     ['icon'=>'📈','label'=>'Laporan',    'href'=>'reports.php',  'key'=>'reports'],
+    ['icon'=>'📜','label'=>'Aktivitas',  'href'=>'activity.php', 'key'=>'activity'],
     ['icon'=>'⚙️','label'=>'Pengaturan', 'href'=>'settings.php', 'key'=>'settings'],
 ];
 ?>

@@ -15,13 +15,14 @@ $redirect = $_GET['redirect'] ?? 'dashboard.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = trim($_POST['email']    ?? '');
     $password = trim($_POST['password'] ?? '');
+    $remember = !empty($_POST['remember']);
 
     if (!$email || !$password) {
         $error = 'Email dan password wajib diisi.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Format email tidak valid.';
     } else {
-        $result = user_login($email, $password);
+        $result = user_login($email, $password, $remember);
         if ($result['success']) {
             // Regenerate session untuk keamanan
             session_regenerate_id(true);
@@ -64,14 +65,14 @@ require_once 'includes/header.php';
         </div>
         <?php endif; ?>
 
-        <form method="POST" action="login.php?redirect=<?= urlencode($redirect) ?>" novalidate>
+        <form method="POST" action="login.php?redirect=<?= urlencode($redirect) ?>" id="loginForm" novalidate>
 
             <div class="form-group">
                 <label class="form-label">📧 Email</label>
                 <input type="email" name="email" class="form-input"
                     placeholder="email@contoh.com"
                     value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
-                    required autocomplete="email">
+                    required autocomplete="email" autofocus>
             </div>
 
             <div class="form-group" style="position:relative">
@@ -91,12 +92,12 @@ require_once 'includes/header.php';
                 margin-bottom:1.5rem;font-size:.8rem">
                 <label style="display:flex;align-items:center;gap:.5rem;color:var(--gray);cursor:pointer">
                     <input type="checkbox" name="remember" style="accent-color:var(--blue)">
-                    Ingat saya
+                    Ingat saya (30 hari)
                 </label>
                 <a href="forgot-password.php" style="color:var(--blue)">Lupa password?</a>
             </div>
 
-            <button type="submit" class="btn-primary ripple-host"
+            <button type="submit" id="loginBtn" class="btn-primary ripple-host"
                 style="width:100%;justify-content:center;padding:1rem;font-size:.95rem">
                 Masuk →
             </button>
@@ -133,7 +134,16 @@ function togglePass() {
     if (inp.type === 'password') { inp.type = 'text';     btn.textContent = '🙈'; }
     else                         { inp.type = 'password'; btn.textContent = '👁'; }
 }
+document.getElementById('loginForm')?.addEventListener('submit', function() {
+    const btn = document.getElementById('loginBtn');
+    btn.style.opacity = '.7';
+    btn.style.pointerEvents = 'none';
+    btn.innerHTML = '<span style="display:inline-block;animation:spin .8s linear infinite">⏳</span> Memproses...';
+});
 const gamesData = <?= json_encode(array_map(fn($g)=>['name'=>$g['name'],'slug'=>$g['slug'],'icon'=>$g['icon'],'currency'=>$g['currency']],$games)) ?>;
 </script>
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 
 <?php require_once 'includes/footer.php'; ?>

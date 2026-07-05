@@ -16,7 +16,7 @@
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-cache, no-store, must-revalidate');
 
-require_once __DIR__ . '/chat_engine.php';
+require_once __DIR__ . '/chat_engine_db.php';
 
 // ── Helpers ───────────────────────────────────────────────────
 function resp($data, $code = 200) {
