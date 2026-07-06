@@ -31,7 +31,27 @@ function db(): PDO {
         ]);
     } catch (PDOException $e) {
         error_log('[DB ERROR] ' . $e->getMessage());
-        die('Koneksi database gagal. Cek konfigurasi DB di includes/db.php');
+        $is_admin = strpos($_SERVER['REQUEST_URI'] ?? '', '/admin') !== false;
+        http_response_code(503);
+        die('<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8">
+<title>Database Error — GameStore</title>
+<style>body{font-family:sans-serif;background:#0D1117;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:1rem}
+.box{max-width:520px;background:#161B22;border:1px solid #30363D;border-radius:12px;padding:2rem;text-align:center}
+h1{color:#EF4444;font-size:1.5rem;margin-bottom:.5rem}p{color:#8B949E;line-height:1.7;margin-bottom:1rem}
+code{background:#0D1117;border:1px solid #30363D;padding:.2rem .5rem;border-radius:4px;font-size:.85rem;color:#00D4FF}
+.btn{display:inline-block;background:#2563EB;color:#fff;padding:.625rem 1.25rem;border-radius:8px;text-decoration:none;font-weight:700;margin-top:.5rem}</style>
+</head><body><div class="box">
+<div style="font-size:3rem;margin-bottom:1rem">🗄️</div>
+<h1>Database Tidak Terhubung</h1>
+<p>Tidak bisa konek ke database MySQL. Pastikan:</p>
+<ul style="text-align:left;color:#8B949E;line-height:2;margin-bottom:1rem">
+<li>MySQL / MariaDB sudah berjalan</li>
+<li>Konfigurasi di <code>includes/db.php</code> sudah benar</li>
+<li>Database <code>' . DB_NAME . '</code> sudah dibuat</li>
+<li>File <code>database/gamestore.sql</code> sudah diimport</li>
+</ul>
+<a href="database/setup.php" class="btn">🛠 Jalankan Setup Wizard</a>
+</div></body></html>');
     }
 
     return $pdo;
@@ -241,6 +261,21 @@ function user_require_login(): void {
     }
 }
 
+
+// ── FORMAT HELPERS ───────────────────────────────────────────
+if (!function_exists('formatRp')) {
+    function formatRp($n): string {
+        return 'Rp ' . number_format((int)($n ?? 0), 0, ',', '.');
+    }
+}
+if (!function_exists('formatNum')) {
+    function formatNum($n): string {
+        $n = (int)($n ?? 0);
+        if ($n >= 1000000) return round($n / 1000000, 1) . 'jt';
+        if ($n >= 1000)    return round($n / 1000, 1) . 'rb';
+        return (string)$n;
+    }
+}
 
 // ── ACTIVITY LOGGING ─────────────────────────────────────────
 function log_activity(string $action, string $detail = ''): void {

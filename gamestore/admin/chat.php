@@ -260,6 +260,20 @@ $quick_replies = chat_quick_replies();
     .cw-info-panel { display: none !important; }
 }
 </style>
+<script>
+// showToast fallback jika admin.js belum load
+function showToast(msg, type) {
+    type = type || 'success';
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;' +
+        'background:' + (type==='error'?'#EF4444':type==='info'?'#3B82F6':'#22C55E') + ';' +
+        'color:#fff;padding:.75rem 1.25rem;border-radius:10px;font-size:.85rem;font-weight:700;' +
+        'box-shadow:0 4px 20px rgba(0,0,0,.3);animation:slideIn .3s ease;max-width:320px';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+</script>
 </head>
 <body>
 

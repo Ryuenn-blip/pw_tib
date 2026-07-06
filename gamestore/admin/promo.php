@@ -137,7 +137,9 @@ require_once 'includes/admin_layout.php';
             <td style="font-weight:700;color:var(--cyan)">
                 <?= $p['type']==='percent' ? $p['value'].'%' : formatRp($p['value']) ?>
                 <?php if ($p['max_discount']): ?>
-                <div style="font-size:.68rem;color:var(--gray)">maks <?= formatRp($p['max_discount']) ?></div>
+                <?php if (!empty($p['max_discount'])): ?>
+                <div style="font-size:.68rem;color:var(--gray)">maks <?= formatRp((int)$p['max_discount']) ?></div>
+                <?php endif; ?>
                 <?php endif; ?>
             </td>
             <td style="font-size:.82rem"><?= formatRp((int)$p['min_purchase']) ?></td>

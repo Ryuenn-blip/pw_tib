@@ -28,12 +28,13 @@ function csrf_verify(): bool {
     return !empty($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
 
-function formatRp(int $n): string {
-    return 'Rp ' . number_format($n, 0, ',', '.');
+function formatRp($n): string {
+    return 'Rp ' . number_format((int)($n ?? 0), 0, ',', '.');
 }
-function formatNum(int $n): string {
-    if ($n >= 1000000) return round($n/1000000, 1) . 'jt';
-    if ($n >= 1000)    return round($n/1000, 1)    . 'rb';
+function formatNum($n): string {
+    $n = (int)($n ?? 0);
+    if ($n >= 1000000) return round($n / 1000000, 1) . 'jt';
+    if ($n >= 1000)    return round($n / 1000, 1) . 'rb';
     return (string)$n;
 }
 

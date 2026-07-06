@@ -8,17 +8,27 @@
 require_once __DIR__ . '/db.php';
 
 // ── Konstanta global ──────────────────────────────────────────
-define('SITE_NAME',    get_setting('site_name',    'GameStore'));
-define('SITE_TAGLINE', get_setting('site_tagline', 'Top Up Game Terlengkap & Termurah'));
-define('WHATSAPP_NUMBER', get_setting('wa_number', '6281234567890'));
-
-// ── Format Rupiah ─────────────────────────────────────────────
-function formatRupiah(int $number): string {
-    return 'Rp ' . number_format($number, 0, ',', '.');
+try {
+    define('SITE_NAME',       get_setting('site_name',    'GameStore'));
+    define('SITE_TAGLINE',    get_setting('site_tagline', 'Top Up Game Terlengkap & Termurah'));
+    define('WHATSAPP_NUMBER', get_setting('wa_number',    '6281234567890'));
+} catch (\Throwable $e) {
+    if (!defined('SITE_NAME'))       define('SITE_NAME',       'GameStore');
+    if (!defined('SITE_TAGLINE'))    define('SITE_TAGLINE',    'Top Up Game Terlengkap & Termurah');
+    if (!defined('WHATSAPP_NUMBER')) define('WHATSAPP_NUMBER', '6281234567890');
 }
 
-// ── Load produk dari DB ───────────────────────────────────────
-$games = get_active_products();
+// ── Format Rupiah ─────────────────────────────────────────────
+function formatRupiah($number): string {
+    return 'Rp ' . number_format((int)($number ?? 0), 0, ',', '.');
+}
+
+// ── Load produk dari DB (dengan fallback jika DB belum terhubung) ──
+try {
+    $games = get_active_products();
+} catch (\Throwable $e) {
+    $games = []; // Fallback kosong jika DB error
+}
 
 // Normalisasi agar kompatibel dengan template lama
 // (template pakai $game['category'], bukan category_name)

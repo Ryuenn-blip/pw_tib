@@ -26,7 +26,7 @@ require_once 'includes/header.php';
             <div>
                 <div class="detail-game-card" style="padding:0;overflow:hidden">
                     <div style="position:relative;height:180px;overflow:hidden">
-                        <?php if (!empty($game['img_banner'])): ?>
+                        <?php if (!empty($game['img_banne'])): ?>
                         <img src="<?= htmlspecialchars($game['img_banner']) ?>"
                              alt="<?= htmlspecialchars($game['name']) ?>"
                              style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block"
