@@ -310,3 +310,15 @@ FROM products p LEFT JOIN orders o ON o.product_id=p.id GROUP BY p.id;
 --  Login admin  : admin / admin123
 --  Login customer: budi@example.com / admin123
 -- ============================================================
+
+-- ============================================================
+-- MIGRATION: Tambah kolom ke tabel customers jika belum ada
+-- Jalankan ini jika upgrade dari versi sebelumnya
+-- ============================================================
+ALTER TABLE `customers`
+  ADD COLUMN IF NOT EXISTS `remember_token`  VARCHAR(64)  DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `failed_attempts` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS `locked_until`    DATETIME DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `last_login`      DATETIME DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reset_token`     VARCHAR(64)  DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `reset_expires`   DATETIME DEFAULT NULL;

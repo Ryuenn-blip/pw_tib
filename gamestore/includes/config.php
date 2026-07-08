@@ -4,6 +4,9 @@
  * Sumber data: MySQL via PDO (db.php)
  */
 
+// Output buffering - mencegah "headers already sent" error
+if (!ob_get_level()) ob_start();
+
 // Load database
 require_once __DIR__ . '/db.php';
 

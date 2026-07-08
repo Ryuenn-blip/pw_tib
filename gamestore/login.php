@@ -1,6 +1,6 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once 'includes/config.php';
-session_start();
 
 // Sudah login → redirect ke dashboard
 if (user_logged_in()) {
@@ -10,6 +10,7 @@ if (user_logged_in()) {
 
 $error    = '';
 $redirect = $_GET['redirect'] ?? 'dashboard.php';
+$prefill_email = $_GET['email'] ?? '';
 
 // Handle POST login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -59,10 +60,19 @@ require_once 'includes/header.php';
 
         <?php if (isset($_GET['registered'])): ?>
         <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);
-            border-radius:var(--radius);padding:.875rem 1rem;margin-bottom:1.25rem;
-            color:var(--success);font-size:.875rem">
-            ✅ Akun berhasil dibuat! Silakan login.
+            border-radius:var(--radius);padding:1rem 1.125rem;margin-bottom:1.25rem;
+            animation:fadeInDown .4s ease">
+            <div style="display:flex;align-items:center;gap:.625rem;margin-bottom:.3rem">
+                <span style="font-size:1.3rem">🎉</span>
+                <strong style="color:var(--success);font-size:.9rem">Akun berhasil dibuat!</strong>
+            </div>
+            <div style="color:var(--gray);font-size:.82rem;padding-left:1.9rem">
+                Selamat datang di GameStore! Masuk dengan email dan password yang tadi kamu daftarkan.
+            </div>
         </div>
+        <style>
+        @keyframes fadeInDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+        </style>
         <?php endif; ?>
 
         <form method="POST" action="login.php?redirect=<?= urlencode($redirect) ?>" id="loginForm" novalidate>
@@ -71,7 +81,7 @@ require_once 'includes/header.php';
                 <label class="form-label">📧 Email</label>
                 <input type="email" name="email" class="form-input"
                     placeholder="email@contoh.com"
-                    value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+                    value="<?= htmlspecialchars($_POST['email'] ?? $prefill_email) ?>"
                     required autocomplete="email" autofocus>
             </div>
 

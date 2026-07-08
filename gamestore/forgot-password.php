@@ -1,6 +1,6 @@
 <?php
-require_once 'includes/config.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
+require_once 'includes/config.php';
 
 if (user_logged_in()) { header('Location: dashboard.php'); exit; }
 

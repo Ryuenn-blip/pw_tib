@@ -1,6 +1,6 @@
 <?php
-require_once 'includes/config.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
+require_once 'includes/config.php';
 
 // Ambil data dari GET atau session
 $game_name  = trim($_GET['game']  ?? $_SESSION['pay_game']  ?? '');

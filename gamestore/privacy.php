@@ -1,4 +1,5 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once 'includes/config.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 $page_title = 'Kebijakan Privasi';

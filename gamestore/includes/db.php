@@ -171,52 +171,64 @@ function user_login(string $email, string $password, bool $remember = false): ar
         return ['success' => false, 'msg' => 'Email atau password salah.'];
     }
 
-    // ── Rate limiting: cek apakah akun terkunci ───────────────
+    // ── Rate limiting (hanya jika kolom ada) ──────────────────
     if (!empty($user['locked_until']) && strtotime($user['locked_until']) > time()) {
         $remaining = ceil((strtotime($user['locked_until']) - time()) / 60);
-        return ['success' => false, 'msg' => "Akun terkunci sementara karena terlalu banyak percobaan gagal. Coba lagi dalam {$remaining} menit."];
+        return ['success' => false, 'msg' => "Akun terkunci. Coba lagi dalam {$remaining} menit."];
     }
 
     if (!password_verify($password, $user['password'])) {
-        // Tambah hitungan gagal
-        $attempts = (int)($user['failed_attempts'] ?? 0) + 1;
-        if ($attempts >= 5) {
-            db_exec("UPDATE customers SET failed_attempts=0, locked_until=DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id=?", [$user['id']]);
-            return ['success' => false, 'msg' => 'Terlalu banyak percobaan gagal. Akun dikunci selama 15 menit.'];
+        // Cek apakah kolom failed_attempts ada
+        if (array_key_exists('failed_attempts', $user)) {
+            $attempts = (int)($user['failed_attempts'] ?? 0) + 1;
+            if ($attempts >= 5) {
+                try {
+                    db_exec("UPDATE customers SET failed_attempts=0, locked_until=DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id=?", [$user['id']]);
+                } catch (\Throwable $e) {}
+                return ['success' => false, 'msg' => 'Terlalu banyak percobaan gagal. Akun dikunci 15 menit.'];
+            }
+            try {
+                db_exec("UPDATE customers SET failed_attempts=? WHERE id=?", [$attempts, $user['id']]);
+            } catch (\Throwable $e) {}
+            $left = 5 - $attempts;
+            return ['success' => false, 'msg' => "Email atau password salah. Sisa percobaan: {$left}."];
         }
-        db_exec("UPDATE customers SET failed_attempts=? WHERE id=?", [$attempts, $user['id']]);
-        $left = 5 - $attempts;
-        return ['success' => false, 'msg' => "Email atau password salah. Sisa percobaan: {$left}."];
+        return ['success' => false, 'msg' => 'Email atau password salah.'];
     }
 
-    // ── Login berhasil: reset percobaan gagal, catat waktu ────
-    db_exec("UPDATE customers SET failed_attempts=0, locked_until=NULL, last_login=NOW() WHERE id=?", [$user['id']]);
+    // ── Login berhasil ─────────────────────────────────────────
+    try {
+        db_exec("UPDATE customers SET failed_attempts=0, locked_until=NULL, last_login=NOW() WHERE id=?", [$user['id']]);
+    } catch (\Throwable $e) {
+        // Kolom mungkin belum ada - tidak apa-apa
+        try { db_exec("UPDATE customers SET last_login=NOW() WHERE id=?", [$user['id']]); }
+        catch (\Throwable $e2) {}
+    }
 
     // Set session
     $_SESSION['user_id']    = $user['id'];
     $_SESSION['user_name']  = $user['name'];
     $_SESSION['user_email'] = $user['email'];
-    $_SESSION['user_phone'] = $user['phone'];
+    $_SESSION['user_phone'] = $user['phone'] ?? '';
 
-    // ── Remember Me: set cookie token 30 hari ─────────────────
+    // ── Remember Me ────────────────────────────────────────────
     if ($remember) {
-        $token = bin2hex(random_bytes(32));
-        db_exec("UPDATE customers SET remember_token=? WHERE id=?", [hash('sha256', $token), $user['id']]);
-        setcookie('gs_remember', $user['id'] . ':' . $token, [
-            'expires'  => time() + (86400 * 30),
-            'path'     => '/',
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
+        try {
+            $token = bin2hex(random_bytes(32));
+            db_exec("UPDATE customers SET remember_token=? WHERE id=?", [hash('sha256', $token), $user['id']]);
+            // PHP 7.1+ compatible setcookie
+            setcookie('gs_remember', $user['id'] . ':' . $token, time() + (86400 * 30), '/', '', false, true);
+        } catch (\Throwable $e) {}
     }
 
     return ['success' => true, 'user' => $user];
 }
 
 function user_logout(): void {
-    // Hapus remember token dari DB & cookie
     if (!empty($_SESSION['user_id'])) {
-        db_exec("UPDATE customers SET remember_token=NULL WHERE id=?", [$_SESSION['user_id']]);
+        try {
+            db_exec("UPDATE customers SET remember_token=NULL WHERE id=?", [$_SESSION['user_id']]);
+        } catch (\Throwable $e) {}
     }
     if (isset($_COOKIE['gs_remember'])) {
         setcookie('gs_remember', '', time() - 3600, '/');
@@ -227,22 +239,25 @@ function user_logout(): void {
 function user_logged_in(): bool {
     if (!empty($_SESSION['user_id'])) return true;
 
-    // ── Coba auto-login dari cookie "Remember Me" ─────────────
+    // ── Auto-login dari cookie Remember Me ────────────────────
     if (!empty($_COOKIE['gs_remember'])) {
-        [$uid, $token] = array_pad(explode(':', $_COOKIE['gs_remember'], 2), 2, '');
-        if ($uid && $token) {
-            $user = db_row("SELECT * FROM customers WHERE id=? AND remember_token=? AND is_active=1",
-                [(int)$uid, hash('sha256', $token)]);
-            if ($user) {
-                $_SESSION['user_id']    = $user['id'];
-                $_SESSION['user_name']  = $user['name'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_phone'] = $user['phone'];
-                return true;
-            }
-            // Token tidak valid, hapus cookie basi
-            setcookie('gs_remember', '', time() - 3600, '/');
+        $parts = explode(':', $_COOKIE['gs_remember'], 2);
+        if (count($parts) === 2) {
+            [$uid, $token] = $parts;
+            try {
+                $user = db_row("SELECT * FROM customers WHERE id=? AND remember_token=? AND is_active=1",
+                    [(int)$uid, hash('sha256', $token)]);
+                if ($user) {
+                    $_SESSION['user_id']    = $user['id'];
+                    $_SESSION['user_name']  = $user['name'];
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['user_phone'] = $user['phone'] ?? '';
+                    return true;
+                }
+            } catch (\Throwable $e) {}
         }
+        // Token tidak valid - hapus cookie
+        setcookie('gs_remember', '', time() - 3600, '/');
     }
     return false;
 }

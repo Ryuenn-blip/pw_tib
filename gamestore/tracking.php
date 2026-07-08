@@ -1,6 +1,6 @@
 <?php
-require_once 'includes/config.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
+require_once 'includes/config.php';
 
 $page_title = 'Cek Status Order';
 $order      = null;

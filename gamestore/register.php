@@ -1,6 +1,6 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once 'includes/config.php';
-session_start();
 
 if (user_logged_in()) {
     header('Location: dashboard.php'); exit;
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     else {
         $result = user_register($old['name'], $old['email'], $old['phone'], $password);
         if ($result['success']) {
-            header('Location: login.php?registered=1');
+            header('Location: login.php?registered=1&email=' . urlencode($old['email']));
             exit;
         }
         $error = $result['msg'];

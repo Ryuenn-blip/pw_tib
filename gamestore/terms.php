@@ -1,4 +1,5 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once 'includes/config.php';
 $page_title = 'Syarat & Ketentuan';
 require_once 'includes/header.php';
