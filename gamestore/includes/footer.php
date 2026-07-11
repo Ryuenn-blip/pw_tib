@@ -1,3 +1,8 @@
+<?php
+// Hitung $root sebelum dipakai di footer
+$depth = substr_count($_SERVER['PHP_SELF'], '/') - 1;
+$root  = str_repeat('../', $depth);
+?>
 <!-- Footer -->
 <footer class="footer">
     <div class="container">
@@ -19,11 +24,14 @@
             <div class="footer-links">
                 <h4>Game Populer</h4>
                 <ul>
-                    <li><a href="detail.php?slug=mobile-legends">Mobile Legends</a></li>
-                    <li><a href="detail.php?slug=free-fire">Free Fire</a></li>
-                    <li><a href="detail.php?slug=pubg-mobile">PUBG Mobile</a></li>
-                    <li><a href="detail.php?slug=genshin-impact">Genshin Impact</a></li>
-                    <li><a href="detail.php?slug=valorant">Valorant</a></li>
+                    <?php foreach (array_slice($games ?? [], 0, 5) as $fg): ?>
+                    <li><a href="<?= $root ?>detail.php?slug=<?= htmlspecialchars($fg['slug']) ?>">
+                        <?= htmlspecialchars($fg['name']) ?>
+                    </a></li>
+                    <?php endforeach; ?>
+                    <?php if (empty($games)): ?>
+                    <li><a href="<?= $root ?>products.php">Lihat Semua Game</a></li>
+                    <?php endif; ?>
                 </ul>
             </div>
 
@@ -70,9 +78,7 @@
 
 <!-- ── Live Chat Widget ── -->
 <?php
-// Hitung path relatif ke root dari halaman manapun
-$depth = substr_count($_SERVER['PHP_SELF'], '/') - 1;
-$root  = str_repeat('../', $depth);
+// $root sudah dihitung di atas footer
 ?>
 <script>window.__CHAT_ROOT = '<?= $root ?>';</script>
 <?php include dirname(__DIR__) . '/chat/widget.php'; ?>

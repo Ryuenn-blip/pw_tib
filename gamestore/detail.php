@@ -28,7 +28,7 @@ require_once 'includes/header.php';
                 <div class="detail-game-card" style="padding:0;overflow:hidden">
                     <div style="position:relative;height:180px;overflow:hidden">
                         <?php if (!empty($game['img_banner'])): ?>
-                        <img src="<?= htmlspecialchars($game['img_banner']) ?>"
+                        <img src="<?= htmlspecialchars($game['img_banner']) ? loading="lazy">" alt="<?= htmlspecialchars($game['name']) ?>"
                              alt="<?= htmlspecialchars($game['name']) ?>"
                              style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block"
                              onerror="this.style.display='none'">
@@ -149,7 +149,7 @@ require_once 'includes/header.php';
         <div class="product-card" onclick="location.href='detail.php?slug=<?= $rg['slug'] ?>'">
             <div class="card-glow"></div>
             <div class="card-image">
-                <img src="<?= htmlspecialchars($rg['img'] ?? '') ?>" alt="<?= htmlspecialchars($rg['name']) ?>"
+                <img src="<?= htmlspecialchars($rg['img'] ?? '') ? loading="lazy">" alt="<?= htmlspecialchars($rg['name']) ?>"
                      loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder.svg'">
                 <div class="card-img-overlay"></div>
             </div>

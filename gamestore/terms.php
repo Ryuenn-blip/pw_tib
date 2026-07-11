@@ -4,156 +4,172 @@ require_once 'includes/config.php';
 $page_title = 'Syarat & Ketentuan';
 require_once 'includes/header.php';
 ?>
+<style>
+.terms-page{padding:100px 0 4rem}
+.terms-wrap{max-width:820px;margin:0 auto;padding:0 1.5rem}
+.terms-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem}
+.terms-section h2{font-size:1rem;font-weight:800;margin-bottom:.875rem;display:flex;align-items:center;gap:.5rem;color:var(--white)}
+.terms-section p,.terms-section li{color:var(--gray);font-size:.875rem;line-height:1.85}
+.terms-section ul{padding-left:1.25rem;margin-top:.5rem}
+.terms-section li{margin-bottom:.375rem}
+.terms-toc{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem}
+.terms-toc a{display:block;font-size:.82rem;color:var(--gray);text-decoration:none;padding:.2rem 0;transition:.2s}
+.terms-toc a:hover{color:var(--cyan)}
+.highlight-box{background:rgba(37,99,235,.07);border:1px solid rgba(37,99,235,.2);border-radius:8px;padding:.875rem;margin-top:.75rem;font-size:.82rem;color:var(--gray);line-height:1.7}
+</style>
 
-<div style="padding:100px 0 4rem">
-    <div class="container" style="max-width:800px">
+<div class="terms-page">
+<div class="terms-wrap">
 
-        <div style="text-align:center;margin-bottom:3rem">
-            <div style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(37,99,235,.1);
-                border:1px solid rgba(37,99,235,.25);color:var(--cyan);
-                padding:.35rem 1rem;border-radius:100px;font-size:.8rem;font-weight:600;margin-bottom:1rem">
-                📜 Legal
-            </div>
-            <h1 style="font-size:2rem;font-weight:900;margin-bottom:.5rem">Syarat & Ketentuan</h1>
-            <p style="color:var(--gray);font-size:.875rem">Terakhir diperbarui: <?= date('d F Y') ?></p>
+    <div style="text-align:center;margin-bottom:2rem">
+        <div style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(37,99,235,.1);
+            border:1px solid rgba(37,99,235,.25);color:var(--cyan);
+            padding:.35rem 1rem;border-radius:100px;font-size:.8rem;font-weight:600;margin-bottom:1rem">
+            📄 Legal
         </div>
+        <h1 style="font-size:1.75rem;font-weight:900;margin-bottom:.375rem">Syarat & Ketentuan</h1>
+        <p style="color:var(--gray);font-size:.82rem">Terakhir diperbarui: <?= date('d F Y') ?> | Wajib dibaca sebelum menggunakan layanan</p>
+    </div>
 
-        <!-- TOC -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);
-            padding:1.25rem 1.5rem;margin-bottom:2.5rem">
-            <div style="font-weight:700;font-size:.875rem;margin-bottom:.875rem;color:var(--gray2);
-                text-transform:uppercase;letter-spacing:.5px">📋 Daftar Isi</div>
-            <div style="display:flex;flex-direction:column;gap:.4rem">
-                <?php
-                $sections = [
-                    '1' => 'Ketentuan Umum',
-                    '2' => 'Layanan GameStore',
-                    '3' => 'Proses Pemesanan & Pembayaran',
-                    '4' => 'Hak & Kewajiban Pengguna',
-                    '5' => 'Kebijakan Refund',
-                    '6' => 'Keamanan & Privasi',
-                    '7' => 'Larangan Penggunaan',
-                    '8' => 'Penyelesaian Sengketa',
-                    '9' => 'Perubahan Ketentuan',
-                ];
-                foreach ($sections as $num => $title): ?>
-                <a href="#section-<?= $num ?>"
-                   style="font-size:.85rem;color:var(--gray);display:flex;gap:.625rem;
-                       align-items:center;padding:.25rem 0;transition:.2s"
-                   onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--gray)'">
-                    <span style="color:var(--blue);font-weight:700;font-size:.75rem;width:20px"><?= $num ?>.</span>
-                    <?= $title ?>
-                </a>
-                <?php endforeach; ?>
-            </div>
-        </div>
-
-        <?php
-        $content = [
-            '1' => ['Ketentuan Umum', '📌', "Dengan mengakses dan menggunakan layanan GameStore (gamestore.id), Anda dianggap telah membaca, memahami, dan menyetujui semua Syarat & Ketentuan yang berlaku. Jika Anda tidak setuju dengan ketentuan ini, mohon untuk tidak menggunakan layanan kami.
-
-GameStore adalah platform jual beli item game digital yang dioperasikan secara resmi di Indonesia. Layanan kami mencakup penjualan diamond, UC, VP, crystal, dan berbagai mata uang in-game lainnya.", [
-                '• Pengguna harus berusia minimal 13 tahun atau mendapat izin orang tua/wali.',
-                '• Pengguna bertanggung jawab atas keamanan data akun yang digunakan.',
-                '• GameStore berhak menolak atau membatalkan order jika ditemukan indikasi penipuan.',
-                '• Layanan GameStore tunduk pada hukum yang berlaku di Republik Indonesia.',
-            ]],
-            '2' => ['Layanan GameStore', '🎮', "GameStore menyediakan layanan top up item game digital secara online. Semua transaksi diproses oleh admin kami secara manual untuk memastikan keamanan dan keakuratan setiap order.", [
-                '• Layanan tersedia 24 jam / 7 hari / 365 hari termasuk hari libur nasional.',
-                '• Harga dapat berubah sewaktu-waktu tanpa pemberitahuan sebelumnya.',
-                '• GameStore tidak menjamin ketersediaan semua item jika terjadi gangguan dari pihak developer game.',
-                '• Kami berhak menambah, mengubah, atau menghentikan layanan tertentu kapan saja.',
-            ]],
-            '3' => ['Proses Pemesanan & Pembayaran', '💳', "Setiap pemesanan dilakukan melalui WhatsApp atau Live Chat dengan admin GameStore. Pembayaran harus dilakukan sesuai nominal yang tertera dan dikonfirmasi kepada admin.", [
-                '• Order dianggap valid setelah pembayaran dikonfirmasi oleh admin.',
-                '• User ID yang dimasukkan sepenuhnya merupakan tanggung jawab pengguna.',
-                '• GameStore tidak bertanggung jawab atas top up yang salah akibat User ID yang keliru.',
-                '• Bukti pembayaran harus disimpan hingga item diterima di akun game.',
-                '• Pembayaran harus dilakukan dalam 30 menit setelah order dikonfirmasi, lewat dari itu order otomatis dibatalkan.',
-            ]],
-            '4' => ['Hak & Kewajiban Pengguna', '👤', "Pengguna memiliki hak untuk mendapatkan layanan sesuai yang dijanjikan dan berhak mengajukan komplain jika terjadi masalah. Di sisi lain, pengguna juga memiliki kewajiban yang harus dipenuhi.", [
-                '• Wajib memberikan informasi yang benar dan akurat saat melakukan order.',
-                '• Wajib melakukan pembayaran sesuai nominal yang disepakati.',
-                '• Berhak mendapat pelayanan ramah dan profesional dari admin kami.',
-                '• Berhak mengajukan refund sesuai ketentuan kebijakan refund yang berlaku.',
-                '• Dilarang menggunakan layanan untuk tujuan yang melanggar hukum.',
-            ]],
-            '5' => ['Kebijakan Refund', '💰', "GameStore memberikan jaminan refund dalam kondisi tertentu. Kami berkomitmen untuk menyelesaikan setiap masalah dengan adil dan transparan.", [
-                '• Refund 100% diberikan jika item tidak masuk dalam 24 jam setelah konfirmasi pembayaran.',
-                '• Refund tidak berlaku jika kesalahan disebabkan oleh User ID yang salah dari pengguna.',
-                '• Proses refund memakan waktu 1x24 jam ke metode pembayaran asal.',
-                '• Refund hanya dapat diproses dengan bukti pembayaran yang valid.',
-                '• Double order (beli 2x paket yang sama) tidak dapat di-refund kecuali terbukti kesalahan sistem.',
-            ]],
-            '6' => ['Keamanan & Privasi', '🔒', "GameStore berkomitmen menjaga keamanan dan privasi data pengguna. Data yang Anda berikan hanya digunakan untuk keperluan proses transaksi.", [
-                '• Data pribadi (nama, nomor WA) tidak akan dijual atau dibagikan ke pihak ketiga.',
-                '• GameStore TIDAK PERNAH meminta password akun game Anda.',
-                '• Jika ada pihak yang mengaku sebagai admin GameStore dan meminta password, segera laporkan.',
-                '• Transaksi dilakukan melalui WhatsApp resmi yang tertera di website.',
-            ]],
-            '7' => ['Larangan Penggunaan', '🚫', "Pengguna dilarang keras melakukan hal-hal berikut yang dapat merugikan GameStore maupun pengguna lain:", [
-                '• Menggunakan layanan untuk aktivitas penipuan atau ilegal.',
-                '• Memberikan User ID palsu atau milik orang lain tanpa izin.',
-                '• Melakukan chargeback (penarikan pembayaran paksa) setelah item diterima.',
-                '• Mencoba meretas atau mengganggu sistem GameStore.',
-                '• Menyebarkan informasi palsu atau menyesatkan tentang GameStore.',
-            ]],
-            '8' => ['Penyelesaian Sengketa', '⚖️', "Jika terjadi perselisihan antara pengguna dan GameStore, penyelesaian akan dilakukan melalui musyawarah untuk mufakat terlebih dahulu.", [
-                '• Komplain dapat diajukan melalui Live Chat, WhatsApp, atau email admin@gamestore.id.',
-                '• Admin akan merespons komplain dalam 1x24 jam.',
-                '• Jika tidak ada kesepakatan, sengketa akan diselesaikan sesuai hukum yang berlaku di Indonesia.',
-                '• GameStore berkomitmen untuk menyelesaikan setiap sengketa secara adil dan transparan.',
-            ]],
-            '9' => ['Perubahan Ketentuan', '🔄', "GameStore berhak mengubah Syarat & Ketentuan ini kapan saja tanpa pemberitahuan sebelumnya. Perubahan akan efektif segera setelah dipublikasikan di halaman ini.", [
-                '• Pengguna disarankan untuk memeriksa halaman ini secara berkala.',
-                '• Penggunaan layanan setelah perubahan dianggap sebagai persetujuan terhadap ketentuan baru.',
-                '• Untuk pertanyaan tentang Syarat & Ketentuan, silakan hubungi admin kami.',
-            ]],
-        ];
-        foreach ($content as $num => [$title, $icon, $desc, $points]):
-        ?>
-        <div id="section-<?= $num ?>"
-             style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);
-                 padding:1.75rem;margin-bottom:1rem">
-            <h2 style="font-size:1.05rem;font-weight:800;margin-bottom:1rem;
-                display:flex;align-items:center;gap:.625rem">
-                <span style="width:32px;height:32px;border-radius:8px;background:rgba(37,99,235,.15);
-                    display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0"><?= $icon ?></span>
-                <?= $num ?>. <?= $title ?>
-            </h2>
-            <p style="color:var(--gray);font-size:.875rem;line-height:1.8;margin-bottom:1rem;
-                white-space:pre-line"><?= htmlspecialchars($desc) ?></p>
-            <ul style="display:flex;flex-direction:column;gap:.5rem">
-                <?php foreach ($points as $pt): ?>
-                <li style="font-size:.85rem;color:var(--gray);display:flex;gap:.625rem;line-height:1.6">
-                    <span style="color:var(--blue);flex-shrink:0;margin-top:.1rem">→</span>
-                    <?= htmlspecialchars(ltrim($pt, '• ')) ?>
-                </li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
+    <!-- TOC -->
+    <div class="terms-toc">
+        <div style="font-weight:700;font-size:.82rem;color:var(--gray2);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.5px">Daftar Isi</div>
+        <?php foreach ([
+            ['#penerimaan','1. Penerimaan Syarat'],
+            ['#layanan','2. Deskripsi Layanan'],
+            ['#akun','3. Akun Pengguna'],
+            ['#order','4. Order & Pembayaran'],
+            ['#proses','5. Proses Top Up'],
+            ['#refund','6. Kebijakan Refund'],
+            ['#larangan','7. Larangan Penggunaan'],
+            ['#hak','8. Hak Kekayaan Intelektual'],
+            ['#batasan','9. Batasan Tanggung Jawab'],
+            ['#perubahan','10. Perubahan Syarat'],
+        ] as [$href,$label]): ?>
+        <a href="<?= $href ?>"><?= $label ?></a>
         <?php endforeach; ?>
+    </div>
 
-        <!-- Footer note -->
-        <div style="margin-top:2rem;padding:1.25rem;background:rgba(37,99,235,.06);
-            border:1px solid rgba(37,99,235,.2);border-radius:var(--radius-lg);
-            text-align:center;font-size:.82rem;color:var(--gray)">
-            Dengan menggunakan layanan GameStore, Anda telah menyetujui seluruh Syarat & Ketentuan di atas.<br>
-            Ada pertanyaan? <a href="contact.php" style="color:var(--cyan);font-weight:600">Hubungi Admin Kami →</a>
+    <div class="terms-section" id="penerimaan">
+        <h2>✅ 1. Penerimaan Syarat</h2>
+        <p>Dengan mengakses atau menggunakan layanan GameStore, kamu menyatakan telah membaca, memahami, dan menyetujui untuk terikat oleh Syarat & Ketentuan ini. Jika kamu tidak menyetujui syarat ini, mohon untuk tidak menggunakan layanan kami.</p>
+        <div class="highlight-box">
+            Syarat & Ketentuan ini berlaku untuk semua pengguna GameStore, termasuk pengunjung, pelanggan terdaftar, dan siapa pun yang mengakses website ini.
         </div>
     </div>
+
+    <div class="terms-section" id="layanan">
+        <h2>🎮 2. Deskripsi Layanan</h2>
+        <p>GameStore adalah platform jual beli digital item game (top up) yang menyediakan:</p>
+        <ul>
+            <li>Top up diamond, UC, VP, dan mata uang dalam game lainnya</li>
+            <li>Proses transaksi melalui konfirmasi manual admin</li>
+            <li>Layanan pelanggan via WhatsApp dan Live Chat</li>
+        </ul>
+        <p style="margin-top:.75rem">Kami bukan afiliasi resmi dari developer game manapun. Layanan ini beroperasi sebagai reseller pihak ketiga.</p>
+    </div>
+
+    <div class="terms-section" id="akun">
+        <h2>👤 3. Akun Pengguna</h2>
+        <ul>
+            <li>Kamu bertanggung jawab atas keamanan akun dan password GameStore milikmu</li>
+            <li>Satu orang hanya boleh memiliki satu akun GameStore</li>
+            <li>Informasi yang diberikan saat pendaftaran harus akurat dan terkini</li>
+            <li>GameStore berhak menangguhkan atau menghapus akun yang melanggar ketentuan</li>
+            <li>Minimal usia untuk mendaftar adalah 13 tahun (di bawah 17 tahun perlu persetujuan orang tua)</li>
+        </ul>
+    </div>
+
+    <div class="terms-section" id="order">
+        <h2>💳 4. Order & Pembayaran</h2>
+        <ul>
+            <li>Semua harga yang tercantum sudah termasuk pajak dan biaya layanan</li>
+            <li>Pembayaran harus dilakukan sesuai nominal <strong style="color:var(--white)">tepat</strong> yang tertera</li>
+            <li>Order yang sudah dikonfirmasi dan diproses <strong style="color:var(--white)">tidak dapat dibatalkan</strong></li>
+            <li>Metode pembayaran yang tersedia: DANA, OVO, GoPay, ShopeePay, Transfer Bank, QRIS</li>
+            <li>GameStore tidak menyimpan data kartu kredit atau rekening bank pengguna</li>
+            <li>Bukti pembayaran wajib disimpan hingga transaksi selesai</li>
+        </ul>
+        <div class="highlight-box">
+            ⚠️ GameStore tidak bertanggung jawab atas keterlambatan atau kegagalan pembayaran yang disebabkan oleh masalah di sisi penyedia layanan pembayaran.
+        </div>
+    </div>
+
+    <div class="terms-section" id="proses">
+        <h2>⚡ 5. Proses Top Up</h2>
+        <ul>
+            <li>Item akan diproses setelah pembayaran <strong style="color:var(--white)">dikonfirmasi admin</strong></li>
+            <li>Waktu proses normal: <strong style="color:var(--white)">1-5 menit</strong> pada jam operasional</li>
+            <li>Pengguna bertanggung jawab atas kebenaran User ID yang dimasukkan</li>
+            <li>GameStore <strong style="color:var(--white)">tidak bertanggung jawab</strong> atas kesalahan User ID yang dimasukkan pengguna</li>
+            <li>Item yang sudah masuk ke akun game <strong style="color:var(--white)">tidak dapat dikembalikan</strong></li>
+        </ul>
+    </div>
+
+    <div class="terms-section" id="refund">
+        <h2>🔄 6. Kebijakan Refund</h2>
+        <p>Refund <strong style="color:var(--white)">HANYA</strong> diberikan dalam kondisi:</p>
+        <ul>
+            <li>Top up gagal karena kesalahan sistem GameStore (bukan kesalahan pengguna)</li>
+            <li>Item tidak masuk dalam waktu 30 menit setelah pembayaran terkonfirmasi</li>
+            <li>Terjadi duplikasi order akibat kesalahan sistem</li>
+        </ul>
+        <p style="margin-top:.75rem">Refund <strong style="color:var(--danger)">TIDAK</strong> diberikan jika:</p>
+        <ul>
+            <li>User ID yang dimasukkan salah</li>
+            <li>Pengguna menyesal setelah order dikonfirmasi</li>
+            <li>Akun game dalam kondisi banned/terkunci</li>
+        </ul>
+        <div class="highlight-box">
+            Proses refund membutuhkan waktu 1x24 jam setelah verifikasi. Dana dikembalikan via metode pembayaran yang sama.
+        </div>
+    </div>
+
+    <div class="terms-section" id="larangan">
+        <h2>🚫 7. Larangan Penggunaan</h2>
+        <p>Pengguna <strong style="color:var(--danger)">dilarang</strong> untuk:</p>
+        <ul>
+            <li>Menggunakan layanan untuk tujuan ilegal atau penipuan</li>
+            <li>Melakukan chargebacks/dispute tanpa menghubungi GameStore terlebih dahulu</li>
+            <li>Membuat akun palsu atau menggunakan identitas orang lain</li>
+            <li>Mencoba meretas atau mengganggu sistem GameStore</li>
+            <li>Menyebarkan informasi palsu tentang GameStore</li>
+            <li>Memanfaatkan bug atau celah sistem untuk keuntungan tidak sah</li>
+        </ul>
+        <p style="margin-top:.75rem">Pelanggaran dapat mengakibatkan penangguhan akun dan/atau tuntutan hukum.</p>
+    </div>
+
+    <div class="terms-section" id="hak">
+        <h2>©️ 8. Hak Kekayaan Intelektual</h2>
+        <p>Seluruh konten website GameStore — termasuk teks, grafik, logo, dan desain — adalah milik GameStore dan dilindungi hak cipta. Kamu tidak diperkenankan menyalin, mendistribusikan, atau menggunakan konten ini tanpa izin tertulis.</p>
+    </div>
+
+    <div class="terms-section" id="batasan">
+        <h2>⚠️ 9. Batasan Tanggung Jawab</h2>
+        <p>GameStore tidak bertanggung jawab atas:</p>
+        <ul>
+            <li>Kerugian akibat kesalahan User ID dari pengguna</li>
+            <li>Gangguan server game dari pihak developer</li>
+            <li>Keterlambatan yang disebabkan force majeure (bencana alam, gangguan internet, dll)</li>
+            <li>Keputusan developer game yang mempengaruhi item yang dibeli</li>
+        </ul>
+        <p style="margin-top:.75rem">Total tanggung jawab GameStore tidak akan melebihi nilai transaksi yang bersangkutan.</p>
+    </div>
+
+    <div class="terms-section" id="perubahan">
+        <h2>📝 10. Perubahan Syarat</h2>
+        <p>GameStore berhak mengubah Syarat & Ketentuan ini sewaktu-waktu. Perubahan signifikan akan diberitahukan melalui website atau WhatsApp. Dengan terus menggunakan layanan setelah perubahan, kamu dianggap menyetujui syarat yang baru.</p>
+    </div>
+
+    <div style="text-align:center;margin-top:2rem;padding:1.25rem;background:var(--bg3);border-radius:var(--radius-lg);font-size:.82rem;color:var(--gray)">
+        Ada pertanyaan? <a href="contact.php" style="color:var(--cyan)">Hubungi kami</a> atau baca
+        <a href="privacy.php" style="color:var(--cyan)">Kebijakan Privasi</a> kami.
+    </div>
+
+</div>
 </div>
 
 <script>
-const gamesData = <?= json_encode(array_map(fn($g) => ['name'=>$g['name'],'slug'=>$g['slug'],'icon'=>$g['icon'],'currency'=>$g['currency']], $games)) ?>;
-// Smooth scroll for TOC links
-document.querySelectorAll('a[href^="#section-"]').forEach(a => {
-    a.addEventListener('click', e => {
-        e.preventDefault();
-        const el = document.querySelector(a.getAttribute('href'));
-        if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
-    });
-});
+const gamesData = <?= json_encode(array_map(fn($g)=>['name'=>$g['name'],'slug'=>$g['slug'],'icon'=>$g['icon'],'currency'=>$g['currency']],$games)) ?>;
 </script>
-
 <?php require_once 'includes/footer.php'; ?>

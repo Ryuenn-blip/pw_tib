@@ -125,10 +125,10 @@ require_once 'includes/header.php';
                  onclick="location.href='detail.php?slug=<?= $game['slug'] ?>'">
                 <div class="card-glow"></div>
                 <div class="card-image">
-                    <img src="<?= htmlspecialchars($game['img']) ?>"
+                    <img src="<?= htmlspecialchars($game['img'] ?? '') ?>"
                          alt="<?= htmlspecialchars($game['name']) ?>"
                          loading="lazy"
-                         onerror="this.onerror=null;this.src='assets/img/placeholder.png'">
+                         onerror="this.onerror=null;this.style.display='none'">
                     <div class="card-img-overlay"></div>
                     <?php if ($game['badge']): ?>
                     <span class="card-badge <?= $badge_class ?>"><?= $game['badge'] ?></span>

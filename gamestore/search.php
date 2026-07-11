@@ -83,7 +83,7 @@ require_once 'includes/header.php';
         <div class="product-card" onclick="location.href='detail.php?slug=<?= $g['slug'] ?>'">
             <div class="card-glow"></div>
             <div class="card-image">
-                <img src="<?= htmlspecialchars($g['img']??'') ?>" alt="<?= htmlspecialchars($g['name']) ?>"
+                <img src="<?= htmlspecialchars($g['img']??'') ? loading="lazy">" alt="<?= htmlspecialchars($g['name']) ?>"
                      loading="lazy" onerror="this.style.display='none'">
                 <div class="card-img-overlay"></div>
                 <?php if (!empty($g['badge'])): ?><span class="card-badge"><?= $g['badge'] ?></span><?php endif; ?>
@@ -135,7 +135,7 @@ require_once 'includes/header.php';
             <div class="card-glow"></div>
             <div class="card-image">
                 <?php if (!empty($g['img'])): ?>
-                <img src="<?= htmlspecialchars($g['img']) ?>" alt="<?= htmlspecialchars($g['name']) ?>"
+                <img src="<?= htmlspecialchars($g['img']) ? loading="lazy">" alt="<?= htmlspecialchars($g['name']) ?>"
                      loading="lazy" onerror="this.style.display='none'">
                 <div class="card-img-overlay"></div>
                 <?php else: ?>

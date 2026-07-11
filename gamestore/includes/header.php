@@ -10,6 +10,17 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($page_title) ? $page_title . ' — ' . SITE_NAME : SITE_NAME . ' — Top Up Game Terlengkap' ?></title>
     <meta name="description" content="Top up game terlengkap dan termurah. Mobile Legends, Free Fire, PUBG, Genshin Impact, Valorant dan ratusan game lainnya. Proses instan 24 jam.">
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="<?= defined('SITE_NAME') ? htmlspecialchars(SITE_NAME) : 'GameStore' ?>">
+    <meta property="og:title"       content="<?= isset($page_title) ? htmlspecialchars($page_title.' — '.(defined('SITE_NAME')?SITE_NAME:'GameStore')) : 'GameStore' ?>">
+    <meta property="og:description" content="Top up game terlengkap dan termurah. Proses instan 24 jam.">
+    <meta property="og:url"         content="<?= 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'] ?>">
+    <!-- Twitter Card -->
+    <meta name="twitter:card"       content="summary">
+    <meta name="twitter:title"      content="<?= isset($page_title) ? htmlspecialchars($page_title) : 'GameStore' ?>">
+    <meta name="robots"             content="index, follow">
+    <link rel="canonical"           href="<?= 'https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'] ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -36,11 +47,17 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
         <ul class="nav-links" id="navLinks">
             <li><a href="index.php" class="<?= $current_page === 'index' ? 'active' : '' ?>">Beranda</a></li>
             <li class="nav-dropdown">
-                <a href="products.php" class="<?= $current_page === 'products' ? 'active' : '' ?>">Kategori <span>▾</span></a>
+                <a href="products.php" class="<?= $current_page === 'products' ? 'active' : '' ?>">Produk <span>▾</span></a>
                 <div class="dropdown-menu">
-                    <a href="products.php?cat=Mobile">📱 Mobile Game</a>
-                    <a href="products.php?cat=PC">💻 PC Game</a>
                     <a href="products.php">🎮 Semua Game</a>
+                    <?php
+                    $nav_cats = $categories ?? ['Mobile','PC','Console'];
+                    $cat_icons = ['Mobile'=>'📱','PC'=>'💻','Console'=>'🎮'];
+                    foreach ($nav_cats as $c):
+                        if ($c === 'Semua') continue;
+                    ?>
+                    <a href="products.php?cat=<?= urlencode($c) ?>"><?= $cat_icons[$c] ?? '🎮' ?> <?= htmlspecialchars($c) ?> Game</a>
+                    <?php endforeach; ?>
                 </div>
             </li>
             <li><a href="cara-order.php" class="<?= $current_page === 'cara-order' ? 'active' : '' ?>">Cara Order</a></li>

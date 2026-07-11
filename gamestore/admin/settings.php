@@ -7,6 +7,8 @@ $active_menu = 'settings';
 // ── Handle save ───────────────────────────────────────────────
 $saved_section = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['section'])) {
+    // CSRF check
+    if (!empty($_POST) && !csrf_verify()) { header("Location: " . $_SERVER['PHP_SELF'] . "?csrf_error=1"); exit; }
     $section = $_POST['section'];
 
     // Fungsi simpan setting ke DB
@@ -122,6 +124,7 @@ require_once 'includes/admin_layout.php';
 <!-- ═══ GENERAL ═══ -->
 <form method="POST">
 <input type="hidden" name="section" value="general">
+                    <?= csrf_field() ?>
 <div class="settings-grid">
     <div class="card">
         <div class="card-header"><div class="card-title">🏪 Informasi Toko</div></div>
@@ -179,6 +182,7 @@ require_once 'includes/admin_layout.php';
 <!-- ═══ PAYMENT ═══ -->
 <form method="POST">
 <input type="hidden" name="section" value="payment">
+                    <?= csrf_field() ?>
 <div class="card" style="margin-bottom:1rem">
     <div class="card-header"><div class="card-title">💳 Metode Aktif</div></div>
     <div class="card-body">
@@ -241,6 +245,7 @@ require_once 'includes/admin_layout.php';
 <!-- ═══ NOTIFICATION ═══ -->
 <form method="POST">
 <input type="hidden" name="section" value="notification">
+                    <?= csrf_field() ?>
 <div class="settings-grid">
     <div class="card">
         <div class="card-header"><div class="card-title">🔔 Notifikasi Admin</div></div>
@@ -285,6 +290,7 @@ require_once 'includes/admin_layout.php';
 <!-- ═══ SECURITY ═══ -->
 <form method="POST">
 <input type="hidden" name="section" value="security">
+                    <?= csrf_field() ?>
 <div class="settings-grid">
     <div class="card">
         <div class="card-header"><div class="card-title">🔒 Ganti Password Admin</div></div>

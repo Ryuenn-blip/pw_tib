@@ -199,11 +199,11 @@ require_once 'includes/header.php';
                 🔄 Refresh Status
             </button>
             <?php endif; ?>
-            <a href="products.php"
+            <a href="invoice.php?id=<?= urlencode($order['id']) ?>"
                style="display:inline-flex;align-items:center;gap:.4rem;background:var(--bg2);
                    border:1px solid var(--border);color:var(--white);padding:.5rem 1rem;
                    border-radius:8px;font-size:.8rem;font-weight:700;text-decoration:none">
-                🎮 Order Lagi
+                🧾 Invoice
             </a>
         </div>
     </div>
