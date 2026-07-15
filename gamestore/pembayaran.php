@@ -304,7 +304,7 @@ require_once 'includes/header.php';
             <div style="font-size:.78rem;color:var(--gray)">Klik / drag & drop · JPG, PNG · Maks 5MB</div>
         </div>
         <div id="uploadPreview" style="display:none;position:relative">
-            <img id="previewImg" style="max-width:100%;max-height:180px;object-fit:contain;border-radius:var(--radius);border:1px solid var(--border)" alt="" loading="lazy">
+            <img id="previewImg" style="max-width:100%;max-height:180px;object-fit:contain;border-radius:var(--radius);border:1px solid var(--border)" alt="">
             <button type="button" onclick="removeFile(event)"
                 style="position:absolute;top:.4rem;right:.4rem;width:26px;height:26px;border-radius:50%;
                     background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:.8rem">✕</button>
@@ -389,7 +389,7 @@ require_once 'includes/header.php';
 <div class="pay-summary">
     <div class="sum-hdr">
         <?php if (!empty($game_obj['img'])): ?>
-        <img src="<?= htmlspecialchars($game_obj['img']) ? loading="lazy">" alt=""
+        <img src="<?= htmlspecialchars($game_obj['img']) ?>" alt=""
              style="width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0"
              onerror="this.style.display='none'">
         <?php else: ?>

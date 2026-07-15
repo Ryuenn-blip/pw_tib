@@ -190,7 +190,7 @@ require_once 'includes/admin_layout.php';
                 <input type="url" class="form-control" id="add_img"
                        placeholder="https://..."
                        oninput="previewImg(this.value,'prev_img')">
-                <img id="prev_img" src="" alt="Preview Foto" class="img-preview" style="display:none"
+                <img id="prev_img" src="" class="img-preview" style="display:none"
                      onerror="this.style.display='none'">
             </div>
             <div class="form-group">
@@ -198,7 +198,7 @@ require_once 'includes/admin_layout.php';
                 <input type="url" class="form-control" id="add_img_banner"
                        placeholder="https://... (kosongkan = sama dengan foto kartu)"
                        oninput="previewImg(this.value,'prev_banner')">
-                <img id="prev_banner" src="" alt="Preview Banner" class="img-preview" style="display:none"
+                <img id="prev_banner" src="" class="img-preview" style="display:none"
                      onerror="this.style.display='none'">
                 <div style="font-size:.72rem;color:var(--gray);margin-top:.4rem">
                     💡 Tips: Pakai link dari Google Play Store atau website resmi game
@@ -305,7 +305,7 @@ require_once 'includes/admin_layout.php';
         <div class="form-group">
             <label class="form-label">URL Foto Kartu</label>
             <input type="url" class="form-control" id="edit_img" oninput="previewImg(this.value,'edit_prev_img')">
-            <img id="edit_prev_img" src="" alt="Preview" class="img-preview" style="display:none;height:80px;object-fit:cover;margin-top:.5rem"
+            <img id="edit_prev_img" src="" class="img-preview" style="display:none;height:80px;object-fit:cover;margin-top:.5rem"
                  onerror="this.style.display='none'">
         </div>
         <div class="form-group">
@@ -426,7 +426,6 @@ require_once 'includes/admin_layout.php';
 
 <script>
 const API     = 'products_api.php';
-const CSRF    = '<?= csrf_token() ?>';
 const fmtRp   = n => 'Rp ' + Number(n).toLocaleString('id-ID');
 let newPkgs   = [];  // buffer paket baru saat tambah produk
 let currentStep = 1;
@@ -469,7 +468,7 @@ function renderTable(products) {
         const minPrice = p.packages && p.packages.length
             ? Math.min(...p.packages.map(x => x.price)) : 0;
         const imgHtml = p.img
-            ? `<img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'" loading="lazy">`
+            ? `<img src="${esc(p.img)}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
             : `<span style="font-size:1.4rem">${esc(p.icon)}</span>`;
         const badgeHtml = p.badge
             ? `<span class="badge badge-${p.badge==='Hot'?'cancelled':p.badge==='Baru'?'completed':'processing'}"
@@ -629,7 +628,6 @@ async function saveProduct() {
     btn.textContent = 'Menyimpan...'; btn.disabled = true;
 
     const fd = new FormData();
-    fd.append('csrf_token', CSRF);
     fd.append('name',        name);
     fd.append('category',    document.getElementById('add_cat').value);
     fd.append('currency',    document.getElementById('add_currency').value.trim());
@@ -648,7 +646,6 @@ async function saveProduct() {
         // Add packages
         for (const pkg of newPkgs) {
             const pfd = new FormData();
-            pfd.append('csrf_token', CSRF);
             pfd.append('product_id', d.id);
             pfd.append('amount', pkg.amount);
             pfd.append('price',  pkg.price);
@@ -700,7 +697,6 @@ function saveEdit() {
     if (!name) { flashErr('edit_name','Nama wajib diisi'); return; }
 
     const fd = new FormData();
-    fd.append('csrf_token', CSRF);
     fd.append('id',          id);
     fd.append('name',        name);
     fd.append('category',    document.getElementById('edit_cat').value);
@@ -773,7 +769,6 @@ function savePkg() {
     if (!price)  { flashErr('pkg_price','Wajib'); return; }
 
     const fd = new FormData();
-    fd.append('csrf_token', CSRF);
     fd.append('product_id', pid);
     fd.append('amount', amount);
     fd.append('price',  price);
@@ -808,7 +803,6 @@ function editPkgInline(idx, amount, price, bonus, productId) {
 
 function saveEditPkg(idx, productId) {
     const fd = new FormData();
-    fd.append('csrf_token', CSRF);
     fd.append('product_id', productId);
     fd.append('pkg_index',  idx);
     fd.append('amount',     document.getElementById('epkg_amount').value);
@@ -826,7 +820,6 @@ function saveEditPkg(idx, productId) {
 function deletePkg(productId, idx) {
     if (!confirm('Hapus paket ini?')) return;
     const fd = new FormData();
-    fd.append('csrf_token', CSRF);
     fd.append('product_id', productId);
     fd.append('pkg_index',  idx);
     fetch(API+'?action=delete_package', {method:'POST', body:fd})

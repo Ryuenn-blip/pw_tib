@@ -6,8 +6,6 @@ $active_menu = 'activity';
 
 // Handle clear all
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['clear_all'])) {
-    // CSRF check
-    if (!empty($_POST) && !csrf_verify()) { header("Location: " . $_SERVER['PHP_SELF'] . "?csrf_error=1"); exit; }
     $count = (int)(db_row("SELECT COUNT(*) AS c FROM activity_logs")['c'] ?? 0);
     db_exec("DELETE FROM activity_logs");
     log_activity('activity_clear', "Semua log ($count entri) dihapus oleh admin");
@@ -116,7 +114,6 @@ function actionStyle(string $action): array {
     <form method="POST" action="activity.php" style="display:inline"
           onsubmit="return confirm('Hapus semua log aktivitas? Tindakan ini tidak bisa dibatalkan!')">
         <input type="hidden" name="clear_all" value="1">
-                    <?= csrf_field() ?>
         <button type="submit" class="btn btn-danger btn-sm">🗑 Hapus Semua Log</button>
     </form>
 </div>

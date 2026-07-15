@@ -9,8 +9,6 @@ $msg = $err = '';
 
 // ── Handle POST ───────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // CSRF check
-    if (!empty($_POST) && !csrf_verify()) { header("Location: " . $_SERVER['PHP_SELF'] . "?csrf_error=1"); exit; }
     $section = $_POST['section'] ?? '';
 
     if ($section === 'profile') {

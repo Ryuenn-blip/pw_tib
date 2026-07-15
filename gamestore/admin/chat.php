@@ -437,7 +437,6 @@ $menu_items = [
 <script>
 // ── Config ────────────────────────────────────────────────────
 const API          = '../chat/api.php';
-const CSRF         = '<?= csrf_token() ?>';
 const QUICK        = <?= json_encode($quick_replies, JSON_UNESCAPED_UNICODE) ?>;
 let activeSession  = null;   // current session object
 let lastMsgId      = null;
@@ -694,7 +693,6 @@ window.cwSend = function() {
     sendTyping(false);
 
     const fd = new FormData();
-    fd.append('csrf_token', CSRF);
     fd.append('session_id', activeSession.id);
     fd.append('sender', 'admin');
     fd.append('text', text);
@@ -720,7 +718,6 @@ window.cwSendTyping = function() {
 function sendTyping(val) {
     if (!activeSession) return;
     const fd = new FormData();
-    fd.append('csrf_token', CSRF);
     fd.append('session_id', activeSession.id);
     fd.append('who', 'admin');
     fd.append('typing', val ? '1' : '0');
@@ -759,7 +756,6 @@ window.resolveSession = function() {
     if (!activeSession) return;
     if (!confirm('Tandai sesi ini sebagai selesai?')) return;
     const fd = new FormData();
-    fd.append('csrf_token', CSRF);
     fd.append('session_id', activeSession.id);
     fd.append('status', 'resolved');
     fetch(API + '?action=resolve', { method:'POST', body:fd })
@@ -777,7 +773,6 @@ window.resolveSession = function() {
 window.reopenSession = function() {
     if (!activeSession) return;
     const fd = new FormData();
-    fd.append('csrf_token', CSRF);
     fd.append('session_id', activeSession.id);
     fd.append('status', 'open');
     fetch(API + '?action=resolve', { method:'POST', body:fd })

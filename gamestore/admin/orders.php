@@ -6,8 +6,6 @@ $active_menu = 'orders';
 
 // Update status via POST
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_status'])) {
-    // CSRF check
-    if (!empty($_POST) && !csrf_verify()) { header("Location: " . $_SERVER['PHP_SELF'] . "?csrf_error=1"); exit; }
     $id  = $_POST['order_id'] ?? '';
     $st  = $_POST['status']   ?? '';
     $allowed = ['pending','processing','completed','cancelled','refunded'];
@@ -123,7 +121,6 @@ $stmap = [
                 <td>
                     <form method="POST" style="margin:0">
                         <input type="hidden" name="update_status" value="1">
-                    <?= csrf_field() ?>
                         <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
                         <select name="status" class="filter-select" style="padding:.3rem .5rem;font-size:.75rem"
                                 onchange="this.form.submit()">
@@ -194,7 +191,7 @@ $stmap = [
         <?php if (!empty($detail_order['proof_image'])): ?>
         <div style="margin-top:.875rem">
             <div style="font-size:.78rem;font-weight:700;color:var(--gray2);margin-bottom:.5rem">Bukti Pembayaran</div>
-            <img src="../uploads/proofs/<?= htmlspecialchars($detail_order['proof_image']) ? loading="lazy">" alt="Bukti Pembayaran"
+            <img src="../uploads/proofs/<?= htmlspecialchars($detail_order['proof_image']) ?>"
                  style="max-width:100%;border-radius:var(--radius);border:1px solid var(--border)"
                  alt="Bukti bayar">
         </div>

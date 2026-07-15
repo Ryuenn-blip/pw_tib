@@ -7,21 +7,11 @@ if (empty($_SESSION['admin_logged_in'])) {
 }
 require_once dirname(__DIR__) . '/includes/db.php';
 require_once 'includes/products_engine.php';
-require_once 'includes/admin_config.php';
 
 function resp($d,$c=200){ http_response_code($c); echo json_encode($d,JSON_UNESCAPED_UNICODE); exit; }
 function err($m,$c=400) { resp(['error'=>$m],$c); }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
-
-// CSRF check untuk semua write actions
-$write_actions = ['create','update','toggle','delete','add_package','update_package','delete_package'];
-if (in_array($action, $write_actions)) {
-    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-    if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
-        err('CSRF token tidak valid', 403);
-    }
-}
 
 switch ($action) {
 

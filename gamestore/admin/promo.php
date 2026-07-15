@@ -8,8 +8,6 @@ $active_menu = 'promo';
 $msg = $err = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // CSRF check
-    if (!empty($_POST) && !csrf_verify()) { header("Location: " . $_SERVER['PHP_SELF'] . "?csrf_error=1"); exit; }
     $action = $_POST['action'] ?? '';
 
     if ($action === 'create') {
@@ -166,7 +164,6 @@ require_once 'includes/admin_layout.php';
             <td>
                 <form method="POST" style="display:inline">
                     <input type="hidden" name="action" value="toggle">
-                    <?= csrf_field() ?>
                     <input type="hidden" name="id" value="<?= $p['id'] ?>">
                     <button type="submit" class="promo-badge <?= $p['is_active']?'promo-active':'promo-inactive' ?>">
                         <?= $p['is_active']?'✅ Aktif':'❌ Nonaktif' ?>
@@ -176,7 +173,6 @@ require_once 'includes/admin_layout.php';
             <td>
                 <form method="POST" style="display:inline" onsubmit="return confirm('Hapus kode <?= htmlspecialchars($p['code']) ?>?')">
                     <input type="hidden" name="action" value="delete">
-                    <?= csrf_field() ?>
                     <input type="hidden" name="id" value="<?= $p['id'] ?>">
                     <button type="submit" class="btn btn-danger btn-sm">🗑</button>
                 </form>
@@ -241,7 +237,6 @@ require_once 'includes/admin_layout.php';
     </div>
     <form method="POST">
     <input type="hidden" name="action" value="create">
-                    <?= csrf_field() ?>
     <div class="modal-body">
         <div class="form-grid">
             <div class="form-group">

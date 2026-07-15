@@ -4,29 +4,8 @@
  * Sumber data: MySQL via PDO (db.php)
  */
 
-// ── Environment settings ──────────────────────────────────────
-// Set ke false di production, true saat development
-define('APP_DEBUG', false);
-
-if (APP_DEBUG) {
-    error_reporting(E_ALL);
-    ini_set('display_errors', '1');
-} else {
-    error_reporting(0);
-    ini_set('display_errors', '0');
-    ini_set('log_errors', '1');
-}
-
 // Output buffering - mencegah "headers already sent" error
 if (!ob_get_level()) ob_start();
-
-// ── Security headers ──────────────────────────────────────────
-if (!headers_sent()) {
-    header('X-Content-Type-Options: nosniff');
-    header('X-Frame-Options: SAMEORIGIN');
-    header('X-XSS-Protection: 1; mode=block');
-    header('Referrer-Policy: strict-origin-when-cross-origin');
-}
 
 // Load database
 require_once __DIR__ . '/db.php';
